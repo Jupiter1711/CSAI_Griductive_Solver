@@ -88,15 +88,11 @@ class GriductiveLogicAgent(LogicAgent):
             var_id = kb.variables.primary.index(cell) + 1
 
             assume_crim = (var_id,)
-            res_crim = self.solver.solve(
-                kb.cnf, kb.variables, assumptions=assume_crim
-            )
+            res_crim = self.solver.solve(kb.cnf, kb.variables, assumptions=assume_crim)
             queries.append(SATQuery(assumptions=assume_crim, result=res_crim))
 
             assume_inn = (-var_id,)
-            res_inn = self.solver.solve(
-                kb.cnf, kb.variables, assumptions=assume_inn
-            )
+            res_inn = self.solver.solve(kb.cnf, kb.variables, assumptions=assume_inn)
             queries.append(SATQuery(assumptions=assume_inn, result=res_inn))
 
             is_crim_sat = res_crim.status == SATStatus.SAT
