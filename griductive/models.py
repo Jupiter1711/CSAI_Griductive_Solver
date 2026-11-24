@@ -67,6 +67,11 @@ class CountKind(str, Enum):
     AT_MOST = "AT_MOST"
 
 
+class ParityKind(str, Enum):
+    EVEN = "EVEN"
+    ODD = "ODD"
+
+
 @dataclass(frozen=True)
 class FactClue:
     id: str
@@ -93,7 +98,23 @@ class CountClue:
     region: Region
 
 
-Clue: TypeAlias = FactClue | BinaryClue | CountClue
+@dataclass(frozen=True)
+class ParityClue:
+    id: str
+    owner: Cell
+    kind: ParityKind
+    region: Region
+
+
+@dataclass(frozen=True)
+class IntersectionClue:
+    id: str
+    owner: Cell
+    k: int
+    region: tuple[Region, ...]
+
+
+Clue: TypeAlias = FactClue | BinaryClue | CountClue | ParityClue | IntersectionClue
 
 
 @dataclass(frozen=True)
