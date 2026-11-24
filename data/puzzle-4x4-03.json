@@ -1,0 +1,47 @@
+{
+  "id": "puzzle-4x4-03",
+  "size": 4,
+  "characters": [
+    {"cell": "A1", "name": "An", "profession": "Doctor"},
+    {"cell": "B1", "name": "Binh", "profession": "Cop"},
+    {"cell": "C1", "name": "Chi", "profession": "Vet"},
+    {"cell": "D1", "name": "Dat", "profession": "Judge"},
+    {"cell": "A2", "name": "Em", "profession": "Dev"},
+    {"cell": "B2", "name": "Giang", "profession": "Chef"},
+    {"cell": "C2", "name": "Hai", "profession": "Nurse"},
+    {"cell": "D2", "name": "Khoa", "profession": "Baker"},
+    {"cell": "A3", "name": "Lan", "profession": "Teacher"},
+    {"cell": "B3", "name": "Minh", "profession": "Pilot"},
+    {"cell": "C3", "name": "Nam", "profession": "Driver"},
+    {"cell": "D3", "name": "Oanh", "profession": "Artist"},
+    {"cell": "A4", "name": "Phong", "profession": "Writer"},
+    {"cell": "B4", "name": "Quan", "profession": "Actor"},
+    {"cell": "C4", "name": "Son", "profession": "Guard"},
+    {"cell": "D4", "name": "Tuan", "profession": "Mayor"}
+  ],
+  "clues": [
+    {"id": "clue-A1", "owner": "A1", "type": "EXACTLY", "k": 1, "region": {"type": "ROW", "row": 1}},
+    {"id": "clue-B1", "owner": "B1", "type": "FACT", "target": "D1", "status": "CRIMINAL"},
+    {"id": "clue-C1", "owner": "C1", "type": "SAME", "left": "B2", "right": "C3"},
+    {"id": "clue-D1", "owner": "D1", "type": "EXACTLY", "k": 1, "region": {"type": "COLUMN", "column": "D"}},
+    {"id": "clue-A2", "owner": "A2", "type": "AT_MOST", "k": 1, "region": {"type": "COLUMN", "column": "A"}},
+    {"id": "clue-B2", "owner": "B2", "type": "EXACTLY", "k": 3, "region": {"type": "NEIGHBORS", "cell": "B2"}},
+    {"id": "clue-C2", "owner": "C2", "type": "SAME", "left": "B2", "right": "B3"},
+    {"id": "clue-D2", "owner": "D2", "type": "DIFFERENT", "left": "A4", "right": "D4"},
+    {"id": "clue-A3", "owner": "A3", "type": "EXACTLY", "k": 1, "region": {"type": "ROW", "row": 4}},
+    {"id": "clue-B3", "owner": "B3", "type": "EXACTLY", "k": 4, "region": {"type": "EXPLICIT", "cells": ["B2", "C2", "B3", "C3"]}},
+    {"id": "clue-C3", "owner": "C3", "type": "EXACTLY", "k": 2, "region": {"type": "COLUMN", "column": "C"}},
+    {"id": "clue-D3", "owner": "D3", "type": "FACT", "target": "B4", "status": "INNOCENT"},
+    {"id": "clue-A4", "owner": "A4", "type": "EXACTLY", "k": 1, "region": {"type": "COLUMN", "column": "A"}},
+    {"id": "clue-B4", "owner": "B4", "type": "EXACTLY", "k": 2, "region": {"type": "ROW", "row": 3}},
+    {"id": "clue-C4", "owner": "C4", "type": "SAME", "left": "A1", "right": "B1"},
+    {"id": "clue-D4", "owner": "D4", "type": "EXACTLY", "k": 1, "region": {"type": "NEIGHBORS", "cell": "D4"}}
+  ],
+  "solution": {
+    "A1": "INNOCENT", "B1": "INNOCENT", "C1": "INNOCENT", "D1": "CRIMINAL",
+    "A2": "INNOCENT", "B2": "CRIMINAL", "C2": "CRIMINAL", "D2": "INNOCENT",
+    "A3": "INNOCENT", "B3": "CRIMINAL", "C3": "CRIMINAL", "D3": "INNOCENT",
+    "A4": "CRIMINAL", "B4": "INNOCENT", "C4": "INNOCENT", "D4": "INNOCENT"
+  },
+  "initially_revealed": ["B1", "A4"]
+}
