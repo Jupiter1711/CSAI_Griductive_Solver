@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 
 from griductive.encoder import CNFEncoder
-from griductive.solver import SATSolver
 from griductive.models import (
     CellClassification,
     Classification,
@@ -14,6 +13,7 @@ from griductive.models import (
     SATQuery,
     SATStatus,
 )
+from griductive.solver import SATSolver
 
 
 class LogicAgent(ABC):
@@ -46,7 +46,9 @@ class GriductiveLogicAgent(LogicAgent):
 
     def build_kb(self, state: PublicState) -> EncodedKB:
         try:
-            return self.encoder.encode(board=state.board, clues=state.clues, verdicts=state.verdicts)
+            return self.encoder.encode(
+                board=state.board, clues=state.clues, verdicts=state.verdicts
+            )
         except ValueError as e:
             raise ValueError(f"Dữ liệu công khai không hợp lệ: {e}") from e
 
@@ -62,7 +64,7 @@ class GriductiveLogicAgent(LogicAgent):
                 status=RunStatus.INCONSISTENT,
                 kb=kb,
                 cells=(),
-                queries=tuple(queries)
+                queries=tuple(queries),
             )
 
         revealed_cells = {v.cell for v in state.verdicts}
@@ -76,7 +78,7 @@ class GriductiveLogicAgent(LogicAgent):
                 status=RunStatus.SOLVED,
                 kb=kb,
                 cells=(),
-                queries=tuple(queries)
+                queries=tuple(queries),
             )
 
         classifications = []
@@ -113,5 +115,5 @@ class GriductiveLogicAgent(LogicAgent):
             status=final_status,
             kb=kb,
             cells=tuple(classifications),
-            queries=tuple(queries)
+            queries=tuple(queries),
         )
