@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from itertools import product
 
 from griductive.models import (
     CNF,
@@ -74,7 +73,7 @@ class BasicCNFEncoder(CNFEncoder):
                 )
 
             elif isinstance(clue, ParityClue):
-                encoded = _parity_encode(clue, board, var_map)
+                encoded = _parity_encode(clue, board, var_map, allocate_aux)
 
             elif isinstance(clue, IntersectionClue):
                 encoded = _intersection_encode(
@@ -321,10 +320,21 @@ def _intersection_encode(
     )
 
 
+def _xor_encode(
+    left: Literal,
+    right: Literal,
+    result: Literal,
+) -> CNF:
+    return (
+        (-left, -right, -result),
+        (left, right, -result),
+        (left, -right, result),
+        (-left, right, result),
+    )
+
+
 def _parity_encode(
-    clue: ParityClue,
-    board: Board,
-    var_map: VarMap,
+    clue: ParityClue, board: Board, var_map: VarMap, allocate_aux: Callable[[], int]
 ) -> CNF:
 
     if clue.kind not in (ParityKind.EVEN, ParityKind.ODD):
@@ -342,25 +352,39 @@ def _parity_encode(
         else:
             return ((),)
 
-    for assignment in product((False, True), repeat=len(literals)):
+    if len(literals) == 1:
+        literal = literals[0]
 
-        number_of_criminals = sum(assignment)
+        if clue.kind == ParityKind.ODD:
+            return ((literal,),)
 
-        if clue.kind == ParityKind.EVEN:
-            valid = number_of_criminals % 2 == 0
+        return ((-literal,),)
 
-        elif clue.kind == ParityKind.ODD:
-            valid = number_of_criminals % 2 == 1
+    # XOR chain for all literals except the last one
+    current = literals[0]
 
-        else:
-            raise ValueError(f"Unsupported parity kind: {clue.kind}")
+    for literal in literals[1:-1]:
+        auxiliary = allocate_aux()
 
-        if not valid:
-            clause = tuple(
-                -literal if value else literal
-                for literal, value in zip(literals, assignment)
+        clauses.extend(_xor_encode(current, literal, auxiliary))
+
+        current = auxiliary
+
+    last = literals[-1]
+
+    if clue.kind == ParityKind.EVEN:
+        clauses.extend(
+            (
+                (-current, last),
+                (current, -last),
             )
-
-            clauses.append(clause)
+        )
+    else:
+        clauses.extend(
+            (
+                (current, last),
+                (-current, -last),
+            )
+        )
 
     return tuple(clauses)
