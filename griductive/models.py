@@ -111,7 +111,7 @@ class IntersectionClue:
     id: str
     owner: Cell
     k: int
-    region: tuple[Region, ...]
+    regions: tuple[Region, ...]
 
 
 Clue: TypeAlias = FactClue | BinaryClue | CountClue | ParityClue | IntersectionClue

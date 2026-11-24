@@ -388,7 +388,7 @@ def test_intersection_clue_logic(
             id="I1",
             owner=Cell(0, 0),
             k=k,
-            region=regions,
+            regions=regions,
         )
 
         encoded = encoder.encode(board, (clue,), ())
@@ -423,7 +423,7 @@ def test_intersection_clue_invalid_k_raises_value_error(
         id="I2",
         owner=Cell(0, 0),
         k=2,
-        region=(
+        regions=(
             RowRegion(0),
             ColumnRegion(0),
         ),

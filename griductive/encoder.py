@@ -307,7 +307,7 @@ def _intersection_encode(
     allocate_aux: Callable[[], int],
 ) -> CNF:
 
-    regions, k = clue.region, clue.k
+    regions, k = clue.regions, clue.k
     cells = _get_intersection_cells(regions, board)
 
     literals = tuple(_get_literal(cell, Status.CRIMINAL, var_map) for cell in cells)
