@@ -11,6 +11,9 @@ from griductive.models import (
     CountKind,
     ExplicitRegion,
     FactClue,
+    IntersectionClue,
+    ParityClue,
+    ParityKind,
     RowRegion,
     Status,
 )
@@ -24,6 +27,10 @@ VALUES = {A: INN, B: T, C: T, D: INN}
 @pytest.mark.parametrize(
     "clue,expected",
     [
+        (ParityClue("p", A, ParityKind.EVEN, ExplicitRegion(())), True),
+        (ParityClue("p", A, ParityKind.ODD, RowRegion(0)), True),
+        (IntersectionClue("i", A, 0, (RowRegion(0), RowRegion(1))), True),
+        (IntersectionClue("i", A, 1, (RowRegion(0), ExplicitRegion((B, C)))), True),
         (FactClue("f", A, B, T), True),
         (FactClue("f", A, B, INN), False),
         (BinaryClue("b", A, BinaryKind.SAME, B, C), True),
@@ -49,6 +56,10 @@ def test_direct_semantics(clue, expected):
 @pytest.mark.parametrize(
     "clue,values",
     [
+        (IntersectionClue("i", A, 0, ()), VALUES),
+        (IntersectionClue("i", A, 1, (RowRegion(0), RowRegion(1))), VALUES),
+        (IntersectionClue("i", A, False, (RowRegion(0),)), VALUES),
+        (ParityClue("p", A, "unexpected", RowRegion(0)), VALUES),
         (FactClue("f", A, B, T), {A: INN}),
         (FactClue("f", A, B, T), {**VALUES, Cell(2, 2): T}),
         (FactClue("f", A, B, T), {**VALUES, B: "CRIMINAL"}),

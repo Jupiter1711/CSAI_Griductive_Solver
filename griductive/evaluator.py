@@ -9,9 +9,11 @@ from griductive.models import (
     Board,
     Cell,
     Clue,
-    CountClue,
     CountKind,
     FactClue,
+    IntersectionClue,
+    ParityClue,
+    ParityKind,
     Status,
 )
 from griductive.regions import GridRegionResolver, validate_cell
@@ -43,7 +45,7 @@ class DirectClueEvaluator(ClueEvaluator):
             validate_cell(cell, size)
             if not isinstance(status, Status):
                 raise ValueError(f"invalid assignment status at {cell!r}")
-        if not isinstance(clue, (FactClue, BinaryClue, CountClue)):
+        if not isinstance(clue, Clue):
             raise ValueError("unknown clue type")
         validate_cell(clue.owner, size)
         if isinstance(clue, FactClue):
@@ -57,11 +59,26 @@ class DirectClueEvaluator(ClueEvaluator):
             right = assignment[validate_cell(clue.right, size)]
             return left == right if clue.kind is BinaryKind.SAME else left != right
 
-        cells = GridRegionResolver().resolve(clue.region, board)
+        resolver = GridRegionResolver()
+        if isinstance(clue, IntersectionClue):
+            if not isinstance(clue.regions, tuple) or not clue.regions:
+                raise ValueError("intersection requires at least one region")
+            first, *rest = clue.regions
+            cells = set(resolver.resolve(first, board))
+            for region in rest:
+                cells.intersection_update(resolver.resolve(region, board))
+        else:
+            cells = resolver.resolve(clue.region, board)
+
+        count = sum(assignment[cell] is Status.CRIMINAL for cell in cells)
+        if isinstance(clue, ParityClue):
+            if not isinstance(clue.kind, ParityKind):
+                raise ValueError("invalid parity kind")
+            return count % 2 == (1 if clue.kind is ParityKind.ODD else 0)
+
         if type(clue.k) is not int or not 0 <= clue.k <= len(cells):
             raise ValueError("k must be an integer between zero and the region size")
-        count = sum(assignment[cell] is Status.CRIMINAL for cell in cells)
-        if clue.kind is CountKind.EXACTLY:
+        if isinstance(clue, IntersectionClue) or clue.kind is CountKind.EXACTLY:
             return count == clue.k
         if clue.kind is CountKind.AT_LEAST:
             return count >= clue.k
