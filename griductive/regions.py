@@ -42,7 +42,7 @@ class GridRegionResolver(RegionResolver):
             return tuple(Cell(row, col) for row in range(size))
 
         if isinstance(region, NeighborRegion):
-            center = _cell(region.cell, size)
+            center = validate_cell(region.cell, size)
             return tuple(
                 Cell(row, col)
                 for row in range(center.row - 1, center.row + 2)
@@ -55,7 +55,7 @@ class GridRegionResolver(RegionResolver):
         if isinstance(region, ExplicitRegion):
             if not isinstance(region.cells, tuple):
                 raise ValueError("explicit region cells must be a tuple")
-            cells = [_cell(cell, size) for cell in region.cells]
+            cells = [validate_cell(cell, size) for cell in region.cells]
             duplicates = sorted({cell for cell in cells if cells.count(cell) > 1})
             if duplicates:
                 names = ", ".join(format_cell(cell) for cell in duplicates)
@@ -120,7 +120,7 @@ def _index(value: object, size: int, what: str) -> int:
     return value
 
 
-def _cell(cell: object, size: int) -> Cell:
+def validate_cell(cell: object, size: int) -> Cell:
     if not isinstance(cell, Cell):
         raise ValueError(f"expected a Cell, got {cell!r}")
     if not (_is_int(cell.row) and _is_int(cell.col)):
