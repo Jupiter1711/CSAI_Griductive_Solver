@@ -53,6 +53,17 @@ pip install -r requirements-dev.txt
 pre-commit install
 ```
 
+## Chạy game
+
+```bash
+pip install -r requirements.txt   # pygame, cài một lần
+python main.py                    # mở danh sách puzzle trong puzzles/
+python main.py --puzzle puzzles/4x4-01.json
+```
+
+Phím tắt: mũi tên chọn ô, `I`/`C` kết luận Innocent/Criminal, `H` gợi ý,
+`A` tự giải, `R` chơi lại, `L` mở danh sách puzzle.
+
 ## Quy trình trước khi commit
 
 Mỗi lần mở terminal mới, nhớ **kích hoạt venv trước**:

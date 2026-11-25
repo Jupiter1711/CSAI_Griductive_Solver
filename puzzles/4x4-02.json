@@ -1,0 +1,47 @@
+{
+  "id": "puzzle-4x4-02",
+  "size": 4,
+  "characters": [
+    {"cell": "A1", "name": "Android 18", "profession": "Android"},
+    {"cell": "B1", "name": "Babidi", "profession": "Sorcerer"},
+    {"cell": "C1", "name": "Dende", "profession": "Guardian"},
+    {"cell": "D1", "name": "Gogeta", "profession": "Fusion"},
+    {"cell": "A2", "name": "Gohan", "profession": "Scholar"},
+    {"cell": "B2", "name": "Goku", "profession": "Saiyan"},
+    {"cell": "C2", "name": "Gotenks", "profession": "Fusion"},
+    {"cell": "D2", "name": "Janemba", "profession": "Demon"},
+    {"cell": "A3", "name": "Kibito", "profession": "Attendant"},
+    {"cell": "B3", "name": "Krillin", "profession": "Monk"},
+    {"cell": "C3", "name": "Majin Buu", "profession": "Majin"},
+    {"cell": "D3", "name": "Mr. Satan", "profession": "Champion"},
+    {"cell": "A4", "name": "Piccolo", "profession": "Namekian"},
+    {"cell": "B4", "name": "Trunks", "profession": "Saiyan"},
+    {"cell": "C4", "name": "Vegeta", "profession": "Prince"},
+    {"cell": "D4", "name": "Vegito", "profession": "Fusion"}
+  ],
+  "clues": [
+    {"id": "clue-A1", "owner": "A1", "type": "EXACTLY", "k": 1, "region": {"type": "ROW", "row": 1}},
+    {"id": "clue-B1", "owner": "B1", "type": "EXACTLY", "k": 1, "region": {"type": "COLUMN", "column": "B"}},
+    {"id": "clue-C1", "owner": "C1", "type": "EXACTLY", "k": 1, "region": {"type": "COLUMN", "column": "C"}},
+    {"id": "clue-D1", "owner": "D1", "type": "EXACTLY", "k": 1, "region": {"type": "COLUMN", "column": "D"}},
+    {"id": "clue-A2", "owner": "A2", "type": "FACT", "target": "B2", "status": "CRIMINAL"},
+    {"id": "clue-B2", "owner": "B2", "type": "EXACTLY", "k": 2, "region": {"type": "NEIGHBORS", "cell": "B2"}},
+    {"id": "clue-C2", "owner": "C2", "type": "SAME", "left": "A1", "right": "D4"},
+    {"id": "clue-D2", "owner": "D2", "type": "DIFFERENT", "left": "B1", "right": "B2"},
+    {"id": "clue-A3", "owner": "A3", "type": "AT_MOST", "k": 1, "region": {"type": "ROW", "row": 3}},
+    {"id": "clue-B3", "owner": "B3", "type": "SAME", "left": "B2", "right": "C3"},
+    {"id": "clue-C3", "owner": "C3", "type": "EXACTLY", "k": 2, "region": {"type": "NEIGHBORS", "cell": "C3"}},
+    {"id": "clue-D3", "owner": "D3", "type": "FACT", "target": "A4", "status": "INNOCENT"},
+    {"id": "clue-A4", "owner": "A4", "type": "EXACTLY", "k": 4, "region": {"type": "EXPLICIT", "cells": ["A1", "B2", "C3", "D4"]}},
+    {"id": "clue-B4", "owner": "B4", "type": "DIFFERENT", "left": "A1", "right": "B1"},
+    {"id": "clue-C4", "owner": "C4", "type": "EXACTLY", "k": 1, "region": {"type": "ROW", "row": 4}},
+    {"id": "clue-D4", "owner": "D4", "type": "AT_LEAST", "k": 1, "region": {"type": "ROW", "row": 2}}
+  ],
+  "solution": {
+    "A1": "CRIMINAL", "B1": "INNOCENT", "C1": "INNOCENT", "D1": "INNOCENT",
+    "A2": "INNOCENT", "B2": "CRIMINAL", "C2": "INNOCENT", "D2": "INNOCENT",
+    "A3": "INNOCENT", "B3": "INNOCENT", "C3": "CRIMINAL", "D3": "INNOCENT",
+    "A4": "INNOCENT", "B4": "INNOCENT", "C4": "INNOCENT", "D4": "CRIMINAL"
+  },
+  "initially_revealed": ["A1", "D4"]
+}

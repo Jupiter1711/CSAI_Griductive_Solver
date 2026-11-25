@@ -1,0 +1,32 @@
+{
+  "id": "puzzle-3x3-02",
+  "size": 3,
+  "characters": [
+    {"cell": "A1", "name": "Dende", "profession": "Healer"},
+    {"cell": "B1", "name": "Dodoria", "profession": "Henchman"},
+    {"cell": "C1", "name": "Frieza", "profession": "Emperor"},
+    {"cell": "A2", "name": "Ginyu", "profession": "Captain"},
+    {"cell": "B2", "name": "Gohan", "profession": "Scholar"},
+    {"cell": "C2", "name": "Nail", "profession": "Warrior"},
+    {"cell": "A3", "name": "Piccolo", "profession": "Namekian"},
+    {"cell": "B3", "name": "Vegeta", "profession": "Prince"},
+    {"cell": "C3", "name": "Zarbon", "profession": "Henchman"}
+  ],
+  "clues": [
+    {"id": "clue-A1", "owner": "A1", "type": "EXACTLY", "k": 1, "region": {"type": "ROW", "row": 1}},
+    {"id": "clue-B1", "owner": "B1", "type": "SAME", "left": "A2", "right": "C3"},
+    {"id": "clue-C1", "owner": "C1", "type": "EXACTLY", "k": 1, "region": {"type": "COLUMN", "column": "C"}},
+    {"id": "clue-A2", "owner": "A2", "type": "DIFFERENT", "left": "A1", "right": "A2"},
+    {"id": "clue-B2", "owner": "B2", "type": "FACT", "target": "B3", "status": "INNOCENT"},
+    {"id": "clue-C2", "owner": "C2", "type": "AT_MOST", "k": 1, "region": {"type": "ROW", "row": 2}},
+    {"id": "clue-A3", "owner": "A3", "type": "EXACTLY", "k": 3, "region": {"type": "EXPLICIT", "cells": ["B1", "A2", "C3"]}},
+    {"id": "clue-B3", "owner": "B3", "type": "EXACTLY", "k": 2, "region": {"type": "NEIGHBORS", "cell": "B3"}},
+    {"id": "clue-C3", "owner": "C3", "type": "FACT", "target": "A1", "status": "INNOCENT"}
+  ],
+  "solution": {
+    "A1": "INNOCENT", "B1": "CRIMINAL", "C1": "INNOCENT",
+    "A2": "CRIMINAL", "B2": "INNOCENT", "C2": "INNOCENT",
+    "A3": "INNOCENT", "B3": "INNOCENT", "C3": "CRIMINAL"
+  },
+  "initially_revealed": ["A1", "A3"]
+}
