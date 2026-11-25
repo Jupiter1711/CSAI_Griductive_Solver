@@ -391,15 +391,27 @@ def test_window_renders_and_clicks_select(window):
     window.frame()
 
 
-def test_window_picker_loads_puzzle(window):
-    window.open_picker()
-    window.frame()
-    assert window.picker_files
-    target = window.picker_files.index(PUZZLE_3X3.resolve())
-    window.click(window.hits[f"pick:{target}"].center)
-    assert not window.picker_open
-    window.ctl.wait()
-    assert window.ctl.puzzle_name == PUZZLE_3X3.stem
+@pytest.mark.parametrize("preloaded", [False, True])
+def test_mouse_click_in_picker_loads_puzzle(preloaded):
+    pygame = pytest.importorskip("pygame")
+    os.environ["SDL_VIDEODRIVER"] = "dummy"
+    from griductive.gui.app import GriductiveWindow
+
+    ctl = loaded() if preloaded else make_controller()
+    window = GriductiveWindow(ctl, (PUZZLES,))
+    try:
+        window.open_picker()
+        window.frame()
+        target = next(p for p in window.picker_files if p.stem == "4x4-01")
+        row = window.hits[f"pick:{window.picker_files.index(target)}"]
+        pos = window._painter.point(*row.center)
+        window.handle(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=pos, button=1))
+        assert not window.picker_open
+        ctl.wait()
+        assert ctl.puzzle_name == "4x4-01"
+        assert ctl.state.board.size == 4
+    finally:
+        window.close()
 
 
 def test_window_picker_reaches_every_puzzle(window):

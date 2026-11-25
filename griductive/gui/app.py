@@ -223,7 +223,8 @@ class GriductiveWindow:
         return True
 
     def _hit(self, pos) -> str | None:
-        return next((k for k, r in self.hits.items() if r.collidepoint(pos)), None)
+        hits = reversed(self.hits.items())  # drawn last = on top
+        return next((k for k, r in hits if r.collidepoint(pos)), None)
 
     def click(self, pos) -> None:
         if self.picker_open:
