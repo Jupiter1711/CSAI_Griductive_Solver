@@ -1,0 +1,237 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage[T5]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,vietnamese]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    hypertexnames=false,
+}
+
+\setlength{\emergencystretch}{2em}
+
+\title{Báo cáo Đồ án 1: Bloxorz Solver}
+
+\begin{document}
+
+\begin{titlepage}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\centering
+\vspace*{0.5cm}
+
+\textsc{\LARGE Trường Đại học Khoa học Tự nhiên}\\[0.35cm]
+\textsc{\Large Ngành Trí tuệ Nhân tạo}\\[0.35cm]
+\textsc{\large Môn học: Cơ sở Trí tuệ Nhân tạo}\\[1.5cm]
+
+\includegraphics[width=0.30\textwidth]{image/logo-khtn.png}\\[1.5cm]
+
+\HRule \\[0.4cm]
+{\huge \bfseries Báo cáo Đồ án 2}\\[0.3cm]
+{\Large \bfseries Griductive Solver}\\[0.4cm]
+\HRule \\[2.0cm]
+
+{\renewcommand{\arraystretch}{1.25}%
+\noindent
+\begin{minipage}[t]{0.56\textwidth}
+\begin{flushleft}
+{\large \emph{Sinh viên thực hiện:}}\\[0.25cm]
+\normalsize
+\begin{tabular}[t]{@{}l@{\hspace{0.5em}--\hspace{0.5em}}l@{}}
+Nguyễn Huỳnh Hải Long & 25122002 \\
+Ngô Quang Minh        & 25122011 \\
+Võ Tấn Lợi            & 25122028 \\
+Hồ Trần Quốc Thắng    & 25122041 \\
+Nguyễn Lê Khánh Toàn  & 25122045
+\end{tabular}
+\end{flushleft}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.42\textwidth}
+\begin{flushright}
+{\large \emph{Giáo viên hướng dẫn:}}\\[0.25cm]
+\normalsize
+\begin{tabular}[t]{@{}r@{}}
+NGND, GS. TS. Lê Hoài Bắc \\
+ThS. Nguyễn Ngọc Đức
+\end{tabular}
+\end{flushright}
+\end{minipage}}
+
+\vfill
+
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ==================== PHẦN 1 ====================
+\section{Giới thiệu và Tổng quan bài toán}
+
+\subsection{Giới thiệu trò chơi Griductive}
+Griductive \cite{griductive_game} là trò chơi giải đố suy luận trên lưới ô vuông kích thước $N \times N$ ($N \in \{3, 4, 5\}$), trong đó mỗi ô chứa một nhân vật mang trạng thái ẩn là \emph{Criminal} (tội phạm) hoặc \emph{Innocent} (người vô tội). Mục tiêu của người chơi là dựa vào các manh mối trên những thẻ đã lật ngửa để lần lượt xác định danh tính của toàn bộ nhân vật còn lại. Điểm khó của trò chơi nằm ở quy tắc \emph{không đoán mò}: mỗi phán quyết chỉ được chấp nhận khi trạng thái đó là hệ quả logic tất yếu từ các dữ kiện hiện có; nếu phán quyết mang tính phỏng đoán hoặc mâu thuẫn, thẻ sẽ không được lật.
+
+Bài toán phù hợp để áp dụng các phương pháp suy diễn tự động dựa trên logic mệnh đề, mã hóa dạng chuẩn hội (CNF) và bộ giải thỏa mãn Boolean (DPLL SAT solver). Đặc biệt, vì mọi manh mối đã lật đều luôn đúng và bộ giải chỉ được tiếp cận trạng thái công khai theo từng bước, đây là môi trường tiêu biểu để thiết kế và đánh giá tác tử suy luận logic chặt chẽ \cite{russell2020aima}.
+
+\subsection{Luật chơi và Các thành phần trong màn chơi}
+\subsubsection{Cấu trúc bàn chơi và Manh mối}
+\begin{itemize}
+    \item \textbf{Cấu trúc lưới và Nhân vật:} Bàn chơi gồm $N$ hàng đánh số từ trên xuống ($1 \dots N$) và $N$ cột đánh chữ cái từ trái sang phải ($A, B, \dots$; ví dụ \texttt{C2}). Mỗi ô chứa một nhân vật với tên (xếp theo bảng chữ cái) và nghề nghiệp; các thông tin này không mang ý nghĩa logic trừ khi manh mối nhắc trực tiếp đến.
+
+    \item \textbf{Trạng thái thẻ bài và Manh mối:} Ban đầu một số thẻ được lật ngửa để cung cấp dữ kiện khởi đầu, các thẻ còn lại úp mặt. Mọi manh mối đã lật đều đúng bất kể chủ nhân thẻ là \emph{Criminal} hay \emph{Innocent}, và được biểu diễn theo các mẫu có cấu trúc chuẩn.
+
+    \item \textbf{Cơ chế suy diễn và Điều kiện thắng:} Ở mỗi lượt, người chơi chọn một nhân vật chưa xác định và gửi phán quyết \texttt{CRIMINAL} hoặc \texttt{INNOCENT}. Nếu phán quyết đúng và chứng minh được, thẻ sẽ lật ngửa để tiết lộ manh mối mới; người chơi thắng khi mở chính xác toàn bộ $N \times N$ ô trên lưới.
+\end{itemize}
+
+\subsubsection{Các vùng manh mối và Cơ chế phản hồi}
+\begin{itemize}
+    \item \textbf{Quy tắc không đoán mò (No-guess rule):} Mỗi màn chơi hợp lệ có duy nhất một phép gán hoàn chỉnh thỏa mãn toàn bộ manh mối, và người chơi chỉ được phép mở thẻ khi trạng thái nhân vật bị ép buộc logic bởi tập manh mối hiện tại.
+
+    \item \textbf{Các vùng manh mối (Clue regions):} Một manh mối có thể tham chiếu đến một trong các vùng trên lưới ô vuông:
+    \begin{itemize}
+        \item \emph{Hàng và Cột (Row \& Column):} Tập hợp tất cả các ô có cùng chỉ số hàng hoặc cùng chữ cái cột.
+        \item \emph{Lân cận 8 hướng (Neighbors):} Các ô tiếp xúc ngang, dọc hoặc chéo với một ô cho trước (tối đa 8 ô, không tính chính ô đó).
+        \item \emph{Danh sách ô chỉ định (Explicit list):} Tập hợp tường minh các tọa độ ô phân biệt được liệt kê trong manh mối.
+    \end{itemize}
+
+    \item \textbf{Cơ chế phản hồi phán quyết:} Khi người chơi đưa ra phán quyết chưa hợp lệ, hệ thống giữ nguyên bàn chơi mà không lật thẻ ẩn, đồng thời phân biệt rõ giữa \texttt{NOT\_PROVABLE} (chưa đủ dữ kiện để chứng minh cả hai chiều) và \texttt{CONTRADICTED} (mâu thuẫn với các manh mối đã biết).
+\end{itemize}
+% ==================== PHẦN 2 ====================
+\section{Kế hoạch thực hiện và Phân công công việc}
+
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}clp{0.44\textwidth}c@{}}
+\toprule
+\textbf{STT} & \textbf{Họ và tên} & \textbf{Công việc phụ trách} & \textbf{Hoàn thành} \\
+\midrule
+1 & Nguyễn Huỳnh Hải Long & \textit{[Điền công việc phụ trách]} & \textit{[...\%]} \\
+2 & Ngô Quang Minh        & \textit{[Điền công việc phụ trách]} & \textit{[...\%]} \\
+3 & Võ Tấn Lợi            & \textit{[Điền công việc phụ trách]} & \textit{[...\%]} \\
+4 & Hồ Trần Quốc Thắng    & \textit{[Điền công việc phụ trách]} & \textit{[...\%]} \\
+5 & Nguyễn Lê Khánh Toàn  & \textit{[Điền công việc phụ trách]} & \textit{[...\%]} \\
+\bottomrule
+\end{tabular*}
+\caption{Bảng phân công công việc và đánh giá mức độ hoàn thành của các thành viên.}
+\label{tab:task_distribution}
+\end{table}
+
+% ==================== PHẦN 3 ====================
+\section{Thiết kế hệ thống và Hiện thực trò chơi}
+
+\subsection{Kiến trúc mã nguồn và Tách biệt vai trò (Role Separation)}
+\textit{[Mô tả tổ chức thư mục mã nguồn, định dạng tệp dữ liệu màn chơi và nguyên tắc tách biệt độc lập giữa \texttt{Game Engine} (quản lý đáp án và thẻ úp) với \texttt{Logic Agent} (chỉ tiếp nhận tri thức công khai $KB_t$).]}
+
+\subsection{Bộ đánh giá ngữ nghĩa trực tiếp (Direct Semantic Evaluator)}
+\textit{[Trình bày cách cài đặt hàm kiểm tra trực tiếp tính đúng/sai của từng loại manh mối trên một phép gán đầy đủ (không thông qua CNF) để đối chiếu và kiểm chứng tính chính xác của bộ mã hóa.]}
+
+\subsection{Giao diện đồ họa (GUI)}
+\textit{[Mô tả thiết kế giao diện, đính kèm ảnh chụp màn hình minh họa và giải thích các chức năng tương tác (hiển thị lưới nhân vật, tô sáng vùng manh mối khi chọn, phân biệt lỗi phán quyết, cùng các nút \texttt{Load}, \texttt{Restart}, \texttt{Hint}, \texttt{Auto Solve}).]}
+
+% ==================== PHẦN 4 ====================
+\section{Mô hình hóa Logic và Các thuật toán Suy diễn}
+
+\subsection{Mô hình hóa bài toán bằng Logic Mệnh đề}
+
+\subsubsection{Biến mệnh đề và Ngôn ngữ manh mối cốt lõi}
+\textit{[Định nghĩa biến mệnh đề chính $C_i$, cách đánh chỉ số biến tất định, tách biệt biến phụ và lập bảng tóm tắt ngữ nghĩa logic của 6 mẫu manh mối cốt lõi (\texttt{FACT}, \texttt{SAME}, \texttt{DIFFERENT}, \texttt{EXACTLY}, \texttt{AT\_LEAST}, \texttt{AT\_MOST}).]}
+
+\subsubsection{Các manh mối mở rộng (Clue Extensions)}
+\textit{[Trình bày cú pháp, ngữ nghĩa logic và cách xử lý của ít nhất 2 mẫu manh mối mở rộng khác biệt mà nhóm đã hiện thực.]}
+
+\subsection{Chuyển đổi tự động sang Dạng chuẩn Hội (CNF Encoding)}
+
+\subsubsection{Cơ chế xây dựng cơ sở tri thức $KB_t$}
+\textit{[Giải thích quy trình chuyển đổi tự động manh mối sang tập mệnh đề tuyển, biểu diễn các phán quyết đã biết thành mệnh đề đơn vị để tạo $KB_t$, và cách thống kê số biến chính, biến phụ, số mệnh đề CNF.]}
+
+\subsubsection{Ví dụ dẫn xuất CNF cho manh mối nhị phân và manh mối đếm}
+\textit{[Trình bày chi tiết từng bước biến đổi sang dạng chuẩn hội (CNF) cho ít nhất một manh mối nhị phân (như \texttt{SAME} hoặc \texttt{DIFFERENT}) và một manh mối đếm số lượng (như \texttt{EXACTLY}, \texttt{AT\_LEAST} hoặc \texttt{AT\_MOST}).]}
+
+\subsection{Bộ giải DPLL SAT Solver}
+\textit{[Trình bày nguyên lý và mã giả thuật toán DPLL tự cài đặt gồm: lan truyền đơn vị (\emph{unit propagation}), phát hiện mâu thuẫn, chọn biến tất định, phân nhánh quay lui và cơ chế ghi nhận thống kê (\emph{decisions}, \emph{propagations}, \emph{backtracks}, \emph{runtime}).]}
+
+\subsection{Tác tử suy diễn (Deductive Logic Agent) và Kiểm tra tính duy nhất}
+
+\subsubsection{Phân loại hệ quả logic và Vòng lặp suy diễn}
+\textit{[Trình bày phương pháp chứng minh phản chứng để phân loại \texttt{CRIMINAL}, \texttt{INNOCENT}, \texttt{UNKNOWN}, \texttt{INCONSISTENT}; mô tả vòng lặp suy diễn cập nhật $KB_t$, xuất vết suy diễn (\emph{deduction trace}) và cơ chế hoạt động của nút \texttt{Hint}.]}
+
+\subsubsection{Kiểm tra tính duy nhất của lời giải (Uniqueness Check)}
+\textit{[Trình bày thuật toán sử dụng mệnh đề chặn nghiệm (\emph{blocking clause}) trên tập manh mối đầy đủ để kiểm tra xem màn chơi có tồn tại duy nhất một nghiệm hay bị mơ hồ/vô nghiệm.]}
+
+% ==================== PHẦN 5 ====================
+\section{Thực nghiệm và Đánh giá}
+
+\subsection{Thiết lập thực nghiệm và Dữ liệu kiểm thử}
+\textit{[Mô tả cấu hình môi trường thực nghiệm, phân nhóm bộ dữ liệu kiểm thử theo kích thước ($3 \times 3$, $4 \times 4$, $5 \times 5$) và liệt kê đầy đủ 6 chỉ số đánh giá bắt buộc theo đề bài.]}
+
+\subsection{Bảng tổng hợp kết quả thực nghiệm}
+\textit{[Điền kết quả thực nghiệm trung bình theo nhóm kích thước và chi tiết từng màn chơi vào Bảng~\ref{tab:benchmark_summary} và Bảng~\ref{tab:benchmark_detailed}, ghi nhận trung thực cả các trường hợp thất bại hoặc quá thời gian (timeout) nếu có.]}
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{0pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrrrrr@{}}
+\toprule
+\textbf{Kích thước} & \textbf{Solved} & \textbf{Vars (P/A)} & \textbf{Clauses} & \textbf{SAT Calls} & \textbf{Dec / Prop / Back} & \textbf{Steps} & \textbf{Time (ms)} \\
+\midrule
+$3 \times 3$ & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} \\
+$4 \times 4$ & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} \\
+$5 \times 5$ & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} \\
+\bottomrule
+\end{tabular*}
+\caption{Bảng tổng hợp kết quả thực nghiệm trung bình theo kích thước bàn chơi.}
+\label{tab:benchmark_summary}
+\end{table}
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.18}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}llrrrrrrr@{}}
+\toprule
+\textbf{Màn chơi} & \textbf{Kích thước} & \textbf{Vars (P/A)} & \textbf{Clauses} & \textbf{SAT Calls} & \textbf{Dec / Prop / Back} & \textbf{Steps} & \textbf{Time (ms)} & \textbf{Trạng thái} \\
+\midrule
+\textit{[Level 1]} & $3 \times 3$ & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[OK/Timeout]} \\
+\bottomrule
+\end{tabular}}
+\caption{Bảng kết quả thực nghiệm chi tiết trên từng màn chơi kiểm thử.}
+\label{tab:benchmark_detailed}
+\end{table}
+
+\subsection{Biểu đồ trực quan hóa hiệu năng}
+\textit{[Chèn các biểu đồ trực quan hóa và so sánh thời gian chạy, số lượng mệnh đề CNF, số lần gọi SAT và số bước quay lui giữa các màn chơi.]}
+
+\subsection{Nhận xét, Thảo luận và Hạn chế}
+\textit{[Phân tích hiệu quả của lan truyền đơn vị, mức độ tăng trưởng mệnh đề CNF trên bàn cờ lớn, nguyên nhân các trường hợp chậm/thất bại (nếu có) và đề xuất hướng cải tiến.]}
+
+% ==================== PHẦN 6 ====================
+\section{Video Demo}
+\textit{[Đính kèm liên kết Google Drive công khai của video demo (dài 5--10 phút, có thuyết minh hoặc phụ đề, đã kiểm tra quyền xem bằng trình duyệt ẩn danh) và liệt kê ngắn gọn các nội dung trình diễn giao diện, chơi thủ công và chạy bộ giải tự động.]}
+
+% ==================== TÀI LIỆU THAM KHẢO ====================
+\begin{thebibliography}{9}
+\bibitem{russell2020aima}
+Stuart Russell and Peter Norvig, \emph{Artificial Intelligence: A Modern Approach}, 4th ed. Pearson, 2020.
+
+\bibitem{dpll1962}
+Martin Davis, George Logemann, and Donald Loveland, ``A Machine Program for Theorem-Proving,'' \emph{Communications of the ACM}, vol. 5, no. 7, pp. 394--397, 1962.
+\end{thebibliography}
+
+
+
+\end{document}
