@@ -1,4 +1,9 @@
-"""Pygame GUI contract. Owner: Hồ Trần Quốc Thắng."""
+"""Pygame GUI contract. Owner: Hồ Trần Quốc Thắng.
+
+The concrete window lives in ``griductive.gui.app.PygameUI``. Importing this
+package must stay free of pygame, so tests and headless tools can use the
+contract and the pure helpers (``text``, ``highlight``, ``controller``).
+"""
 
 from abc import ABC, abstractmethod
 
