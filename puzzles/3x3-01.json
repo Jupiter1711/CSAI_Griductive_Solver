@@ -1,0 +1,32 @@
+{
+  "id": "puzzle-3x3-01",
+  "size": 3,
+  "characters": [
+    {"cell": "A1", "name": "Bulma", "profession": "Scientist"},
+    {"cell": "B1", "name": "Chi-Chi", "profession": "Princess"},
+    {"cell": "C1", "name": "Goku", "profession": "Saiyan"},
+    {"cell": "A2", "name": "Krillin", "profession": "Monk"},
+    {"cell": "B2", "name": "Launch", "profession": "Outlaw"},
+    {"cell": "C2", "name": "Master Roshi", "profession": "Hermit"},
+    {"cell": "A3", "name": "Mr. Satan", "profession": "Champion"},
+    {"cell": "B3", "name": "Tien", "profession": "Fighter"},
+    {"cell": "C3", "name": "Yamcha", "profession": "Bandit"}
+  ],
+  "clues": [
+    {"id": "clue-A1", "owner": "A1", "type": "EXACTLY", "k": 2, "region": {"type": "ROW", "row": 1}},
+    {"id": "clue-B1", "owner": "B1", "type": "DIFFERENT", "left": "A1", "right": "B1"},
+    {"id": "clue-C1", "owner": "C1", "type": "AT_MOST", "k": 1, "region": {"type": "COLUMN", "column": "C"}},
+    {"id": "clue-A2", "owner": "A2", "type": "EXACTLY", "k": 1, "region": {"type": "COLUMN", "column": "A"}},
+    {"id": "clue-B2", "owner": "B2", "type": "EXACTLY", "k": 1, "region": {"type": "NEIGHBORS", "cell": "A1"}},
+    {"id": "clue-C2", "owner": "C2", "type": "EXACTLY", "k": 4, "region": {"type": "EXPLICIT", "cells": ["A1", "C1", "B2", "B3"]}},
+    {"id": "clue-A3", "owner": "A3", "type": "AT_LEAST", "k": 2, "region": {"type": "COLUMN", "column": "B"}},
+    {"id": "clue-B3", "owner": "B3", "type": "SAME", "left": "C2", "right": "C3"},
+    {"id": "clue-C3", "owner": "C3", "type": "FACT", "target": "A3", "status": "INNOCENT"}
+  ],
+  "solution": {
+    "A1": "CRIMINAL", "B1": "INNOCENT", "C1": "CRIMINAL",
+    "A2": "INNOCENT", "B2": "CRIMINAL", "C2": "INNOCENT",
+    "A3": "INNOCENT", "B3": "CRIMINAL", "C3": "INNOCENT"
+  },
+  "initially_revealed": ["B2"]
+}
