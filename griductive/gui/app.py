@@ -1,14 +1,3 @@
-"""Pygame window for Griductive, night theme (data/REDESIGN_BRIEF.md).
-
-Layout is written in logical pixels of the 1440x920 design and drawn through
-``widgets.Painter`` at the window's real resolution, so text and portraits are
-rasterised at device size instead of being stretched. On Windows the process
-is marked DPI-aware for the same reason.
-
-The renderer reads only ``GameController`` fields, which hold public
-snapshots. It never sees a ``Puzzle``, hidden statuses or unrevealed clues.
-"""
-
 import math
 import re
 import sys
@@ -58,8 +47,6 @@ FEEDBACK = {
 
 
 class PygameUI(GameUI):
-    """Desktop GUI. ``run`` blocks until the window is closed."""
-
     def __init__(
         self,
         puzzle_dirs: tuple[Path, ...] = (REPO_ROOT / "puzzles",),
@@ -90,14 +77,11 @@ class PygameUI(GameUI):
 
 
 class GriductiveWindow:
-    """Owns the pygame display; one instance per ``PygameUI.run``."""
-
     def __init__(
         self,
         controller: GameController,
         puzzle_dirs: tuple[Path, ...],
         theme: Theme = DEFAULT_THEME,
-        window_size: tuple[int, int] | None = None,
     ) -> None:
         self.ctl = controller
         self.puzzle_dirs = puzzle_dirs
@@ -107,7 +91,7 @@ class GriductiveWindow:
         _enable_dpi_awareness()
         pygame.init()
         pygame.display.set_caption("Griductive")
-        size = window_size or _initial_window_size(theme)
+        size = _initial_window_size(theme)
         self.window = pygame.display.set_mode(size, pygame.RESIZABLE)
 
         self.hits: dict[str, pygame.Rect] = {}
@@ -119,6 +103,7 @@ class GriductiveWindow:
         self.clue_scroll = 0.0
         self.picker_open = False
         self.picker_files: list[Path] = []
+        self.picker_scroll = 0
         self._hover: dict[Cell, float] = {}
         self._dismissed: Message | None = None
         self._last_clue_id: str | None = None
@@ -126,7 +111,6 @@ class GriductiveWindow:
         self._list_rect = Box(0, 0, 0, 0)
         self._painter: Painter | None = None
 
-    # ------------------------------------------------------------------
     # Main loop
 
     def loop(self, initial_puzzle: Path | None = None, fps: int = 60) -> None:
@@ -148,11 +132,6 @@ class GriductiveWindow:
             self.close()
 
     def close(self) -> None:
-        """Stop background work and release pygame, including cached surfaces.
-
-        Fonts and surfaces cached by lru_cache are invalid after pygame.quit(),
-        so they must be dropped before another window is opened.
-        """
         self.ctl.shutdown()
         widgets.clear_caches()
         portraits.clear_caches()
@@ -167,7 +146,6 @@ class GriductiveWindow:
         return Painter(surface, self.theme, scale, offset)
 
     def frame(self) -> pygame.Surface:
-        """Draw one frame onto the window surface and return it."""
         now = time.monotonic()
         dt, self._last_frame = now - self._last_frame, now
         p = self._painter = self.painter()
@@ -181,14 +159,9 @@ class GriductiveWindow:
         self._draw_focus_ring(p)
         return p.surface
 
-    def save(self, path: Path) -> None:
-        pygame.image.save(self.frame(), str(path))
-
-    # ------------------------------------------------------------------
     # Input
 
     def handle(self, event: pygame.event.Event) -> bool:
-        """Process one event; return False to close the window."""
         if event.type == pygame.QUIT:
             return False
         if event.type == pygame.MOUSEMOTION:
@@ -201,7 +174,9 @@ class GriductiveWindow:
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             self.pressed = None
         elif event.type == pygame.MOUSEWHEEL:
-            if self._list_rect.collidepoint(self.mouse):
+            if self.picker_open:
+                self._scroll_picker(-event.y)
+            elif self._list_rect.collidepoint(self.mouse):
                 self.clue_scroll = max(0.0, self.clue_scroll - event.y * 40)
         elif event.type == pygame.KEYDOWN:
             return self.key(event.key, event.mod)
@@ -218,6 +193,8 @@ class GriductiveWindow:
         if self.picker_open:
             if key == pygame.K_ESCAPE:
                 self.picker_open = False
+            elif key in (pygame.K_UP, pygame.K_DOWN):
+                self._scroll_picker(1 if key == pygame.K_DOWN else -1)
             return True
         moves = {
             pygame.K_LEFT: (0, -1),
@@ -249,7 +226,6 @@ class GriductiveWindow:
         return next((k for k, r in self.hits.items() if r.collidepoint(pos)), None)
 
     def click(self, pos) -> None:
-        """Handle a left click at a logical position."""
         if self.picker_open:
             key = self._hit(pos)
             if key is not None and key.startswith("pick:"):
@@ -334,7 +310,15 @@ class GriductiveWindow:
                 for path in sorted(folder.glob("*.json")):
                     files[path.resolve()] = None
         self.picker_files = list(files)
+        self.picker_scroll = 0
         self.picker_open = True
+
+    def _picker_rows(self) -> int:
+        return max(1, int((self.m.canvas[1] - 2 * self.m.padding - 118) // 60))
+
+    def _scroll_picker(self, rows: int) -> None:
+        hidden = max(0, len(self.picker_files) - self._picker_rows())
+        self.picker_scroll = max(0, min(hidden, self.picker_scroll + rows))
 
     def _to_logical(self, pos) -> tuple[float, float]:
         p = self._painter or self.painter()
@@ -353,11 +337,9 @@ class GriductiveWindow:
         self.hits[key] = box
         return box
 
-    # ------------------------------------------------------------------
     # Layout helpers
 
     def _content(self) -> tuple[float, float, float, float]:
-        """(left, top, right, bottom) of the area below the header."""
         width, height = self.m.canvas
         pad = self.m.padding
         return pad, self.m.header_h + 40, width - pad, height - pad
@@ -366,7 +348,6 @@ class GriductiveWindow:
         return self._content()[2] - self.m.panel_w
 
     def _grid(self) -> tuple[float, float, float, float, float, float]:
-        """(x, y, width, height, card_w, card_h) of the card grid."""
         left, top, _, _ = self._content()
         n = self.ctl.state.board.size if self.ctl.state else 3
         gap = self.m.gap
@@ -381,7 +362,6 @@ class GriductiveWindow:
         return x, y, width, height, card_w, card_h
 
     def card_rect(self, cell: Cell) -> pygame.Rect:
-        """Logical rect of a card (used by tests and hit testing)."""
         x, y, _, _, card_w, card_h = self._grid()
         gap = self.m.gap
         return pygame.Rect(
@@ -391,7 +371,6 @@ class GriductiveWindow:
             round(card_h),
         )
 
-    # ------------------------------------------------------------------
     # Header
 
     def _draw_header(self, p: Painter) -> None:
@@ -470,7 +449,6 @@ class GriductiveWindow:
             "midleft",
         )
 
-    # ------------------------------------------------------------------
     # Board
 
     def _draw_board(self, p: Painter, now: float, dt: float) -> None:
@@ -537,7 +515,6 @@ class GriductiveWindow:
         )
 
     def _lift(self, cell: Cell, rect, dt: float) -> float:
-        """Hover lift with a 180 ms ease toward the target."""
         target = 1.0 if self._hovered(rect) else 0.0
         value = self._hover.get(cell, 0.0)
         step = dt / (self.m.hover_ms / 1000) if self.m.hover_ms else 1.0
@@ -558,7 +535,6 @@ class GriductiveWindow:
         return math.sin(age * 55) * 5 * (1 - age / span)
 
     def _verdict_style(self, status: Status) -> tuple[RGB, Color, RGB, Color, str]:
-        """(card bg, border, chip text, chip bg, chip label) for a verdict."""
         c = self.c
         if status is Status.INNOCENT:
             return (
@@ -577,7 +553,6 @@ class GriductiveWindow:
         )
 
     def _draw_card(self, p: Painter, rect, character: Character, now: float) -> None:
-        """Draw one card; a revealed card flips in over ``flip_ms``."""
         status = self.ctl.verdict_of(character.cell)
         started = self.ctl.reveal_times.get(character.cell)
         span = self.m.flip_ms / 1000
@@ -662,7 +637,6 @@ class GriductiveWindow:
             )
 
     def _clue_size(self, p: Painter, text: str, body, card_h: float) -> float:
-        """Largest clue size (down to the floor) whose wrapped lines fit ``body``."""
         m = self.m
         size = m.clue_card if card_h >= 180 else m.clue_card_small
         _, _, w, h = body
@@ -745,7 +719,6 @@ class GriductiveWindow:
             )
             cursor = item.right + 18
 
-    # ------------------------------------------------------------------
     # Right panel
 
     def _draw_panel(self, p: Painter, now: float) -> None:
@@ -874,7 +847,6 @@ class GriductiveWindow:
         )
 
     def _feedback(self) -> tuple[str, str, str] | None:
-        """(title, text, tone) for the feedback box, or None to hide it."""
         ctl = self.ctl
         if ctl.busy and not ctl.auto_running:
             return "WORKING", f"{ctl.job_name}…", "neutral"
@@ -1066,14 +1038,14 @@ class GriductiveWindow:
                 p.text(value, (box.x + 200, ry), m.mono_label, c.ink, "mono")
         return box
 
-    # ------------------------------------------------------------------
     # Picker and focus
 
     def _draw_picker(self, p: Painter) -> None:
         m, c = self.m, self.c
         width, height = m.canvas
         p.fill((-width, -height, width * 3, height * 3), c.scrim)
-        shown = self.picker_files[:8]
+        first = self.picker_scroll
+        shown = self.picker_files[first : first + self._picker_rows()]
         box = Box(0, 0, 520, 118 + max(1, len(shown)) * 60)
         box.center = (width / 2, height / 2)
         self._register("picker", box)
@@ -1086,8 +1058,9 @@ class GriductiveWindow:
             c.ink,
             "display",
         )
+        more = len(self.picker_files) > len(shown)
         p.text(
-            "esc to close",
+            "scroll for more · esc to close" if more else "esc to close",
             (box.right - 28, box.y + 34),
             m.mono_small,
             c.ink_faint,
@@ -1104,7 +1077,7 @@ class GriductiveWindow:
             )
         for i, path in enumerate(shown):
             row = Box(box.x + 20, box.y + 76 + i * 60, box.w - 40, 52)
-            self._register(f"pick:{i}", row)
+            self._register(f"pick:{first + i}", row)
             hovered = row.collidepoint(self.mouse)
             p.fill(
                 row,
@@ -1143,15 +1116,15 @@ class GriductiveWindow:
         )
 
 
-# --------------------------------------------------------------------------
 # Helpers
 
 
 def _pretty_name(name: str | None) -> str:
-    """'3x3-kame-house-1' -> 'Kame House 1'."""
     if not name:
         return "No puzzle"
     name = re.sub(r"^\d+x\d+-", "", name)
+    if name.isdigit():
+        return f"Puzzle {name}"
     return " ".join(part.capitalize() for part in re.split(r"[-_\s]+", name) if part)
 
 
@@ -1161,7 +1134,6 @@ def _clock(seconds: float) -> str:
 
 
 def _enable_dpi_awareness() -> None:
-    """Render at real pixels on scaled Windows displays (no bitmap blur)."""
     if sys.platform != "win32":
         return
     try:
@@ -1173,7 +1145,6 @@ def _enable_dpi_awareness() -> None:
 
 
 def _initial_window_size(theme: Theme) -> tuple[int, int]:
-    """The design size at the display's scale, shrunk to fit the desktop."""
     logical_w, logical_h = theme.metrics.canvas
     try:
         desktop_w, desktop_h = pygame.display.get_desktop_sizes()[0]
