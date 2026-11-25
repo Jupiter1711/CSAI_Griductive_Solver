@@ -1,0 +1,32 @@
+{
+  "id": "puzzle-3x3-01",
+  "size": 3,
+  "characters": [
+    {"cell": "A1", "name": "An", "profession": "Doctor"},
+    {"cell": "B1", "name": "Bao", "profession": "Cop"},
+    {"cell": "C1", "name": "Cuong", "profession": "Vet"},
+    {"cell": "A2", "name": "Dung", "profession": "Dev"},
+    {"cell": "B2", "name": "Em", "profession": "Chef"},
+    {"cell": "C2", "name": "Giang", "profession": "Nurse"},
+    {"cell": "A3", "name": "Hai", "profession": "Teacher"},
+    {"cell": "B3", "name": "Lan", "profession": "Pilot"},
+    {"cell": "C3", "name": "Minh", "profession": "Driver"}
+  ],
+  "clues": [
+    {"id": "clue-A1", "owner": "A1", "type": "EXACTLY", "k": 2, "region": {"type": "ROW", "row": 1}},
+    {"id": "clue-B1", "owner": "B1", "type": "DIFFERENT", "left": "A1", "right": "B1"},
+    {"id": "clue-C1", "owner": "C1", "type": "AT_MOST", "k": 1, "region": {"type": "COLUMN", "column": "C"}},
+    {"id": "clue-A2", "owner": "A2", "type": "EXACTLY", "k": 1, "region": {"type": "COLUMN", "column": "A"}},
+    {"id": "clue-B2", "owner": "B2", "type": "EXACTLY", "k": 1, "region": {"type": "NEIGHBORS", "cell": "A1"}},
+    {"id": "clue-C2", "owner": "C2", "type": "EXACTLY", "k": 4, "region": {"type": "EXPLICIT", "cells": ["A1", "C1", "B2", "B3"]}},
+    {"id": "clue-A3", "owner": "A3", "type": "AT_LEAST", "k": 2, "region": {"type": "COLUMN", "column": "B"}},
+    {"id": "clue-B3", "owner": "B3", "type": "SAME", "left": "C2", "right": "C3"},
+    {"id": "clue-C3", "owner": "C3", "type": "FACT", "target": "A3", "status": "INNOCENT"}
+  ],
+  "solution": {
+    "A1": "CRIMINAL", "B1": "INNOCENT", "C1": "CRIMINAL",
+    "A2": "INNOCENT", "B2": "CRIMINAL", "C2": "INNOCENT",
+    "A3": "INNOCENT", "B3": "CRIMINAL", "C3": "INNOCENT"
+  },
+  "initially_revealed": ["B2"]
+}
