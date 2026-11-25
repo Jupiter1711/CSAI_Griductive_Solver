@@ -1,10 +1,9 @@
 """Round character portraits from assets/avatars/<size>/<slug>.png.
 
-tools/prepare_avatars.py writes each portrait at 192, 128 and 72 px (the @2x
-sizes for 96, 64 and 36/28 px on screen). Here the smallest file that is at
-least as large as the on-screen size is scaled *down* to the exact device
-size, masked to a circle and given a faint inner ring. Names without a file
-get the initials disc shown in the design mock-up.
+Each portrait exists at 192, 128 and 72 px (the @2x sizes for 96, 64 and
+36/28 px on screen). The smallest file at least as large as the on-screen size
+is scaled down to the exact device size, masked to a circle and given a faint
+inner ring. Names without a file get an initials disc.
 """
 
 import re
@@ -19,7 +18,7 @@ from griductive.gui.theme import Theme
 AVATAR_DIR = Path(__file__).resolve().parents[2] / "assets" / "avatars"
 SIZES = (72, 128, 192)
 
-# Alternate spellings (fans, the Spanish API) -> file slug.
+# Alternate character names -> portrait file slug.
 ALIASES = {
     "freezer": "frieza",
     "freeza": "frieza",

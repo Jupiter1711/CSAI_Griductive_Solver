@@ -4,4 +4,3 @@ isort==9.0.2
 pre_commit==4.7.0
 pytest==9.2.0
 pytest-cov==7.1.0
-pillow==11.3.0
