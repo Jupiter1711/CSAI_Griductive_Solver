@@ -1,21 +1,3 @@
-"""GUI state and background jobs, independent of pygame.
-
-Threading model
----------------
-Engine, agent and runner calls may be slow (SAT queries), so each user action
-runs as one job on a single worker thread. The worker never touches controller
-fields; it posts closures to a queue and ``poll()`` applies them on the UI
-thread. Only one job runs at a time, so submit/restart/load never overlap, as
-docs/architecture.md requires. Auto Solve is one job that loops over
-``runner.step`` and checks a cancel flag between steps.
-
-Information boundary
---------------------
-The controller keeps only ``PublicState`` snapshots. A loaded ``Puzzle`` goes
-straight from the loader to ``engine.load`` inside the worker and is never
-stored here, so rendering code cannot read hidden statuses or clues.
-"""
-
 import queue
 import threading
 import time
@@ -91,8 +73,6 @@ class Message:
 
 @dataclass(frozen=True)
 class Hint:
-    """Result of a read-only classify call; cell is None when nothing is forced."""
-
     status: RunStatus
     cell: Cell | None = None
     classification: Classification | None = None
@@ -101,11 +81,6 @@ class Hint:
 
 @dataclass(frozen=True)
 class SolverInfo:
-    """Totals over every SAT query since the puzzle was loaded or restarted.
-
-    variables/auxiliary/clauses describe the most recent knowledge base.
-    """
-
     sat_calls: int = 0
     decisions: int = 0
     propagations: int = 0
@@ -146,7 +121,6 @@ class GameController:
         self.info = SolverInfo()
         self.run_status: RunStatus | None = None
         self.reveal_times: dict[Cell, float] = {}
-        self.given_cells: frozenset[Cell] = frozenset()
         self.started_at: float | None = None
         self.finished_at: float | None = None
         self.rejection: tuple[Cell, float] | None = None
@@ -159,7 +133,6 @@ class GameController:
         self._cancel = threading.Event()
         self._focus_cache: tuple[PublicState, str, ClueFocus] | None = None
 
-    # ------------------------------------------------------------------
     # Queries used by the renderer
 
     @property
@@ -201,7 +174,6 @@ class GameController:
         )
 
     def focus(self) -> ClueFocus | None:
-        """Cells referenced by the selected clue, cached per state snapshot."""
         clue = self.selected_clue()
         if clue is None or self.state is None:
             return None
@@ -221,7 +193,6 @@ class GameController:
         return describe_clue(clue, self.state.board)
 
     def elapsed(self) -> float:
-        """Seconds since load/restart, frozen once the puzzle is solved."""
         if self.started_at is None:
             return 0.0
         end = self.finished_at or time.monotonic()
@@ -235,7 +206,6 @@ class GameController:
             and self.verdict_of(self.selected_cell) is None
         )
 
-    # ------------------------------------------------------------------
     # Selection (UI thread only, never blocks)
 
     def select_cell(self, cell: Cell | None) -> None:
@@ -254,10 +224,8 @@ class GameController:
         self.selected_cell = current
 
     def select_clue(self, clue_id: str | None) -> None:
-        """Click a clue to highlight its cells; click again to clear."""
         self.selected_clue_id = None if clue_id == self.selected_clue_id else clue_id
 
-    # ------------------------------------------------------------------
     # Commands (each starts at most one background job)
 
     def load(self, path: Path) -> bool:
@@ -308,7 +276,6 @@ class GameController:
         return self._start("Thinking", work)
 
     def toggle_auto(self) -> bool:
-        """Start Auto Solve, or ask a running one to stop after its current step."""
         if self.auto_running:
             self._cancel.set()
             self._set_message(MessageKind.BUSY, "Stopping after the current step...")
@@ -335,11 +302,9 @@ class GameController:
         self.auto_running = started
         return started
 
-    # ------------------------------------------------------------------
     # Job plumbing
 
     def poll(self) -> None:
-        """Apply finished work. Call once per frame from the UI thread."""
         while True:
             try:
                 apply = self._results.get_nowait()
@@ -348,7 +313,6 @@ class GameController:
             apply()
 
     def wait(self, timeout: float = 10.0) -> None:
-        """Block until the current job ends, then apply its results (tests/CLI)."""
         job = self._job
         if job is not None:
             job.join(timeout)
@@ -401,7 +365,6 @@ class GameController:
         self._set_message(MessageKind.ERROR, text)
         self.log.append(f"Error: {text}")
 
-    # ------------------------------------------------------------------
     # Applying results (UI thread)
 
     def _set_message(self, kind: MessageKind, text: str) -> None:
@@ -450,7 +413,6 @@ class GameController:
         self.reveal_times.clear()
         self._set_state(state)
         self.puzzle_name = name
-        self.given_cells = frozenset(v.cell for v in state.verdicts)
         self.started_at = time.monotonic()
         self.finished_at = None
         self.rejection = None

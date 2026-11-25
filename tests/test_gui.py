@@ -1,17 +1,19 @@
-"""GUI tests: wording, highlighting, controller flow and a headless window smoke.
-
-The engine/agent/runner here are brute-force fakes (tests/fakes.py), so these
-tests check GUI behaviour, not the project's SAT solver.
-"""
+"""GUI tests: wording, highlighting, controller flow and a headless window smoke."""
 
 import os
 import subprocess
 import sys
 import threading
+import time
 from pathlib import Path
 
 import pytest
 
+from griductive.agent.inference import GriductiveLogicAgent
+from griductive.agent.runner import GriductiveRunner
+from griductive.encoder import BasicCNFEncoder
+from griductive.engine import GridGameEngine
+from griductive.evaluator import DirectClueEvaluator
 from griductive.gui.controller import GameController, MessageKind
 from griductive.gui.highlight import clue_focus, related_clue
 from griductive.gui.text import cell_label, describe_clue
@@ -27,24 +29,25 @@ from griductive.models import (
     CountKind,
     ExplicitRegion,
     FactClue,
+    IntersectionClue,
     NeighborRegion,
+    ParityClue,
+    ParityKind,
     PublicState,
     Puzzle,
     RowRegion,
     RunStatus,
     Status,
 )
-from tests.fakes import (
-    BruteForceAgent,
-    FakeEngine,
-    FakeRegions,
-    FakeRunner,
-    JsonPuzzleLoader,
-)
+from griductive.puzzle_io import JsonPuzzleLoader
+from griductive.regions import GridRegionResolver
+from griductive.solver import DPLLSolver
+from griductive.validation import SATPuzzleValidator
 
 ROOT = Path(__file__).resolve().parents[1]
-DEMO = ROOT / "tests" / "fixtures" / "gui"
-PUZZLE_3X3 = DEMO / "3x3-kame-house-1.json"
+PUZZLES = ROOT / "puzzles"
+PUZZLE_3X3 = PUZZLES / "3x3-01.json"
+REGIONS = GridRegionResolver()
 NAMES = ["Bulma", "Chiaotzu", "Gohan", "Goku", "Krillin", "Piccolo", "Roshi"]
 NAMES += ["Vegeta", "Yamcha"]
 BOARD = Board(
@@ -52,13 +55,27 @@ BOARD = Board(
 )
 
 
+class SlowAgent(GriductiveLogicAgent):
+    def __init__(self, delay: float = 0.0) -> None:
+        super().__init__(BasicCNFEncoder(), DPLLSolver())
+        self.delay = delay
+
+    def classify(self, state: PublicState):
+        time.sleep(self.delay)
+        return super().classify(state)
+
+
 def make_controller(delay: float = 0.0) -> GameController:
+    validator = SATPuzzleValidator(
+        BasicCNFEncoder(), DPLLSolver(), DirectClueEvaluator()
+    )
+    engine = GridGameEngine(validator, SlowAgent())
     return GameController(
-        FakeEngine(),
-        BruteForceAgent(delay),
-        FakeRunner(),
+        engine,
+        SlowAgent(delay),
+        GriductiveRunner(),
         JsonPuzzleLoader(),
-        FakeRegions(),
+        REGIONS,
         step_delay=0.0,
     )
 
@@ -71,7 +88,7 @@ def loaded() -> GameController:
 
 
 def forced_cells(ctl: GameController) -> dict[Cell, Classification]:
-    analysis = BruteForceAgent().classify(ctl.state)
+    analysis = SlowAgent().classify(ctl.state)
     return {c.cell: c.classification for c in analysis.cells}
 
 
@@ -140,6 +157,22 @@ def test_cell_label_uses_column_letter_then_row():
             ),
             "There is at most 1 criminal among A1, B3 and C2.",
         ),
+        (
+            ParityClue("p", Cell(0, 0), ParityKind.ODD, RowRegion(0)),
+            "There is an odd number of criminals in row 1.",
+        ),
+        (
+            ParityClue("p", Cell(0, 0), ParityKind.EVEN, NeighborRegion(Cell(1, 1))),
+            "There is an even number of criminals among Krillin's neighbors.",
+        ),
+        (
+            IntersectionClue("i", Cell(0, 0), 1, (RowRegion(0), ColumnRegion(1))),
+            "Exactly 1 criminal is in row 1 and in column B.",
+        ),
+        (
+            IntersectionClue("i", Cell(0, 0), 0, (RowRegion(2), ColumnRegion(0))),
+            "No criminal is in row 3 and in column A.",
+        ),
     ],
 )
 def test_describe_clue(clue, text):
@@ -152,25 +185,35 @@ def test_describe_clue(clue, text):
 
 def test_focus_counts_region_and_marks_neighbor_center_as_anchor():
     clue = CountClue("c", Cell(0, 0), CountKind.EXACTLY, 1, NeighborRegion(Cell(0, 0)))
-    focus = clue_focus(clue, BOARD, FakeRegions())
+    focus = clue_focus(clue, BOARD, REGIONS)
     assert focus.counted == (Cell(0, 1), Cell(1, 0), Cell(1, 1))
     assert focus.anchors == (Cell(0, 0),)
 
 
 def test_focus_for_fact_and_binary_clues():
-    regions = FakeRegions()
+    regions = REGIONS
     fact = FactClue("f", Cell(0, 0), Cell(2, 2), Status.CRIMINAL)
     same = BinaryClue("s", Cell(0, 0), BinaryKind.SAME, Cell(2, 0), Cell(0, 2))
     assert clue_focus(fact, BOARD, regions).counted == (Cell(2, 2),)
     assert clue_focus(same, BOARD, regions).counted == (Cell(0, 2), Cell(2, 0))
 
 
+def test_focus_for_parity_and_intersection_clues():
+    parity = ParityClue("p", Cell(0, 0), ParityKind.EVEN, NeighborRegion(Cell(0, 0)))
+    focus = clue_focus(parity, BOARD, REGIONS)
+    assert focus.counted == (Cell(0, 1), Cell(1, 0), Cell(1, 1))
+    assert focus.anchors == (Cell(0, 0),)
+
+    both = IntersectionClue("i", Cell(0, 0), 1, (RowRegion(1), ColumnRegion(2)))
+    assert clue_focus(both, BOARD, REGIONS).counted == (Cell(1, 2),)
+
+
 def test_related_clue_is_first_revealed_clue_mentioning_cell():
     row = CountClue("r", Cell(0, 0), CountKind.EXACTLY, 1, RowRegion(2))
     col = CountClue("c", Cell(0, 1), CountKind.EXACTLY, 1, ColumnRegion(0))
-    assert related_clue(Cell(2, 0), (row, col), BOARD, FakeRegions()) is row
-    assert related_clue(Cell(1, 0), (row, col), BOARD, FakeRegions()) is col
-    assert related_clue(Cell(1, 1), (row, col), BOARD, FakeRegions()) is None
+    assert related_clue(Cell(2, 0), (row, col), BOARD, REGIONS) is row
+    assert related_clue(Cell(1, 0), (row, col), BOARD, REGIONS) is col
+    assert related_clue(Cell(1, 1), (row, col), BOARD, REGIONS) is None
 
 
 # --------------------------------------------------------------------------
@@ -327,7 +370,7 @@ def window():
     from griductive.gui.app import GriductiveWindow
 
     ctl = loaded()
-    win = GriductiveWindow(ctl, (DEMO,))
+    win = GriductiveWindow(ctl, (PUZZLES,))
     yield win
     win.close()
 
@@ -359,9 +402,19 @@ def test_window_picker_loads_puzzle(window):
     assert window.ctl.puzzle_name == PUZZLE_3X3.stem
 
 
-def test_given_cards_and_rejection_feedback_are_tracked():
+def test_window_picker_reaches_every_puzzle(window):
+    window.open_picker()
+    window.frame()
+    last = len(window.picker_files) - 1
+    assert last >= 8
+    for _ in range(last):
+        window._scroll_picker(1)
+    window.frame()
+    assert f"pick:{last}" in window.hits
+
+
+def test_rejection_feedback_is_tracked():
     ctl = loaded()
-    assert ctl.given_cells == {v.cell for v in ctl.state.verdicts}
     labels = forced_cells(ctl)
     unknown = next(c for c, k in labels.items() if k is Classification.UNKNOWN)
     ctl.select_cell(unknown)
