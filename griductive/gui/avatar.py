@@ -1,11 +1,3 @@
-"""Round character portraits from assets/avatars/<size>/<slug>.png.
-
-Each portrait exists at 192, 128 and 72 px (the @2x sizes for 96, 64 and
-36/28 px on screen). The smallest file at least as large as the on-screen size
-is scaled down to the exact device size, masked to a circle and given a faint
-inner ring. Names without a file get an initials disc.
-"""
-
 import re
 from functools import lru_cache
 from pathlib import Path
@@ -42,7 +34,6 @@ def slug(name: str) -> str:
 
 
 def portrait_path(name: str, wanted: int = 192) -> Path | None:
-    """Smallest exported size >= ``wanted`` px, else the largest that exists."""
     found = [
         AVATAR_DIR / str(size) / f"{slug(name)}.png"
         for size in SIZES
@@ -71,7 +62,6 @@ def initials(name: str) -> str:
 
 @lru_cache(maxsize=512)
 def avatar(theme: Theme, name: str, size_px: int) -> pygame.Surface:
-    """Circular portrait exactly ``size_px`` device pixels wide."""
     colors = theme.colors
     size_px = max(4, size_px)
     disc = pygame.Surface((size_px, size_px), pygame.SRCALPHA)
@@ -102,6 +92,5 @@ def avatar(theme: Theme, name: str, size_px: int) -> pygame.Surface:
 
 
 def clear_caches() -> None:
-    """Drop cached surfaces; they become invalid after pygame.quit()."""
     _load.cache_clear()
     avatar.cache_clear()

@@ -1,19 +1,3 @@
-"""Night theme: every colour, font and size the GUI uses lives here.
-
-Source: data/REDESIGN_BRIEF.md section 3-5 and the two reference images
-in data/. Colour rules:
-
-* accent (orange) only marks the selected cell, keyboard focus, the primary
-  button, the progress bar and the Hint button;
-* innocent (teal) only means innocent, criminal (red) only means criminal,
-  spotlight (blue) only marks cells a selected clue talks about;
-* no gradients, no layered glows, no one-sided coloured borders.
-
-A theme is plain data; the engine and agent never see it. Colours with an
-alpha channel are RGBA tuples and are blended over their background by the
-drawing helpers.
-"""
-
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -29,46 +13,44 @@ def _alpha(rgb: RGB, opacity: float) -> RGBA:
 
 
 WHITE = (255, 255, 255)
-ACCENT = (245, 165, 36)  # #F5A524
-INNOCENT = (92, 200, 160)  # #5CC8A0
-CRIMINAL = (240, 96, 93)  # #F0605D
-SPOTLIGHT = (110, 168, 255)  # #6EA8FF
+ACCENT = (245, 165, 36)
+INNOCENT = (92, 200, 160)
+CRIMINAL = (240, 96, 93)
+SPOTLIGHT = (110, 168, 255)
 
 
 @dataclass(frozen=True)
 class Colors:
-    bg: RGB = (13, 14, 18)  # #0D0E12
-    surface: RGB = (21, 23, 29)  # #15171D
-    surface_2: RGB = (18, 20, 25)  # #121419
-    card: RGB = (22, 24, 31)  # #16181F
+    bg: RGB = (13, 14, 18)
+    surface: RGB = (21, 23, 29)
+    surface_2: RGB = (18, 20, 25)
+    card: RGB = (22, 24, 31)
     hairline: RGBA = _alpha(WHITE, 0.08)
     line: RGBA = _alpha(WHITE, 0.14)
 
-    ink: RGB = (236, 234, 228)  # #ECEAE4
-    ink_body: RGB = (218, 216, 209)  # #DAD8D1
-    ink_muted: RGB = (154, 154, 163)  # #9A9AA3
-    ink_faint: RGB = (138, 139, 148)  # #8A8B94
+    ink: RGB = (236, 234, 228)
+    ink_body: RGB = (218, 216, 209)
+    ink_muted: RGB = (154, 154, 163)
+    ink_faint: RGB = (138, 139, 148)
 
     accent: RGB = ACCENT
-    on_accent: RGB = (26, 18, 5)  # #1A1205
+    on_accent: RGB = (26, 18, 5)
     accent_halo: RGBA = _alpha(ACCENT, 0.14)
     accent_glow: RGBA = _alpha(ACCENT, 0.45)
 
-    innocent: RGB = INNOCENT
-    innocent_text: RGB = (127, 216, 182)  # #7FD8B6
-    innocent_bg: RGB = (21, 34, 29)  # #15221D
+    innocent_text: RGB = (127, 216, 182)
+    innocent_bg: RGB = (21, 34, 29)
     innocent_line: RGBA = _alpha(INNOCENT, 0.42)
     innocent_chip: RGBA = _alpha(INNOCENT, 0.12)
+    innocent_feedback_bg: RGBA = _alpha(INNOCENT, 0.08)
+    innocent_feedback_line: RGBA = _alpha(INNOCENT, 0.30)
 
-    criminal: RGB = CRIMINAL
-    criminal_text: RGB = (244, 145, 142)  # #F4918E
-    criminal_bg: RGB = (36, 23, 26)  # #24171A
+    criminal_text: RGB = (244, 145, 142)
+    criminal_bg: RGB = (36, 23, 26)
     criminal_line: RGBA = _alpha(CRIMINAL, 0.48)
     criminal_chip: RGBA = _alpha(CRIMINAL, 0.12)
     criminal_feedback_bg: RGBA = _alpha(CRIMINAL, 0.08)
     criminal_feedback_line: RGBA = _alpha(CRIMINAL, 0.30)
-    innocent_feedback_bg: RGBA = _alpha(INNOCENT, 0.08)
-    innocent_feedback_line: RGBA = _alpha(INNOCENT, 0.30)
 
     spotlight: RGB = SPOTLIGHT
     spotlight_bg: RGBA = _alpha(SPOTLIGHT, 0.10)
@@ -79,7 +61,7 @@ class Colors:
     progress_track: RGBA = _alpha(WHITE, 0.07)
     avatar_ring: RGBA = _alpha(WHITE, 0.12)
     scrim: RGBA = (0, 0, 0, 160)
-    # Muted discs behind initials when a character has no portrait file.
+    # Discs behind initials when a character has no portrait file.
     monogram: tuple[RGB, ...] = (
         (40, 70, 100),
         (100, 46, 46),
@@ -93,20 +75,18 @@ class Colors:
 
 @dataclass(frozen=True)
 class Fonts:
-    display: Path = FONT_DIR / "BricolageGrotesque-Bold.ttf"  # 700
-    body: Path = FONT_DIR / "Inter-Regular.ttf"  # 400
-    body_medium: Path = FONT_DIR / "Inter-Medium.ttf"  # 500
-    body_semibold: Path = FONT_DIR / "Inter-SemiBold.ttf"  # 600
-    mono: Path = FONT_DIR / "JetBrainsMono-Regular.ttf"  # 400
-    mono_medium: Path = FONT_DIR / "JetBrainsMono-Medium.ttf"  # 500
+    display: Path = FONT_DIR / "BricolageGrotesque-Bold.ttf"
+    body: Path = FONT_DIR / "Inter-Regular.ttf"
+    body_medium: Path = FONT_DIR / "Inter-Medium.ttf"
+    body_semibold: Path = FONT_DIR / "Inter-SemiBold.ttf"
+    mono: Path = FONT_DIR / "JetBrainsMono-Regular.ttf"
+    mono_medium: Path = FONT_DIR / "JetBrainsMono-Medium.ttf"
     fallback_sans: str = "segoeui,arial"
     fallback_mono: str = "consolas,couriernew"
 
 
 @dataclass(frozen=True)
 class Metrics:
-    """Logical pixels (the design is 1440 wide); the window scales them."""
-
     canvas: tuple[int, int] = (1440, 920)
     padding: int = 32
     header_h: int = 76
@@ -123,7 +103,6 @@ class Metrics:
     button_h: int = 44
     verdict_button_h: int = 48
     icon: int = 16
-    hit_min: int = 44
     progress_h: int = 4
     avatar_unknown: int = 96
     avatar_revealed: int = 36
@@ -141,7 +120,6 @@ class Metrics:
     hover_ms: int = 180
     flip_ms: int = 300
     shake_ms: int = 300
-    # Type scale (px) per role.
     logo: int = 24
     panel_name: int = 30
     section_title: int = 20
@@ -155,10 +133,8 @@ class Metrics:
     mono_small: int = 11
     mono_label: int = 12
     mono_clock: int = 14
-    # Mono text at or below this size uses the 500 weight (legibility).
-    mono_medium_max: int = 12
-    # Glyph coverage gamma: browsers thicken light-on-dark text this way.
-    text_gamma: float = 1.3
+    mono_medium_max: int = 12  # mono text up to this size uses the 500 weight
+    text_gamma: float = 1.3  # glyph coverage gamma, thickens light-on-dark text
 
 
 @dataclass(frozen=True)
@@ -168,5 +144,4 @@ class Theme:
     metrics: Metrics = field(default_factory=Metrics)
 
 
-NIGHT = Theme()
-DEFAULT_THEME = NIGHT
+DEFAULT_THEME = Theme()

@@ -1,11 +1,3 @@
-"""Resolution-independent drawing for the night theme.
-
-Callers work in logical pixels (the 1440-wide design). ``Painter`` maps them
-to device pixels with one scale factor, so text is rasterised at the real
-screen size instead of being stretched afterwards. Colours may carry alpha;
-translucent shapes are composited through a temporary layer.
-"""
-
 import math
 from contextlib import contextmanager
 from functools import lru_cache
@@ -15,16 +7,8 @@ import pygame.freetype
 
 from griductive.gui.theme import RGB, Color, Theme
 
-ROLES = ("display", "body", "medium", "semibold", "mono", "mono_medium")
-
-
-# --------------------------------------------------------------------------
-# Float rectangle (pygame 2.6 has no FRect)
-
 
 class Box:
-    """Minimal float rect for logical coordinates."""
-
     __slots__ = ("x", "y", "w", "h")
 
     def __init__(self, *args) -> None:
@@ -102,17 +86,8 @@ class Box:
         return self.x <= point[0] < self.right and self.y <= point[1] < self.bottom
 
 
-# --------------------------------------------------------------------------
-# Fonts and colours
-
-
 @lru_cache(maxsize=16)
 def face(theme: Theme, role: str) -> pygame.freetype.Font:
-    """FreeType face for a role, sized per call.
-
-    pygame.freetype (not pygame.font/SDL_ttf) keeps fractional advances and
-    applies the font's kerning table, so word shapes match browser layout.
-    """
     if not pygame.freetype.get_init():
         pygame.freetype.init()
     fonts = theme.fonts
@@ -139,12 +114,6 @@ def face(theme: Theme, role: str) -> pygame.freetype.Font:
 
 @lru_cache(maxsize=8)
 def _gamma_table(gamma: float) -> bytes:
-    """Coverage curve applied to glyph alpha (browser-style stem darkening).
-
-    Linear alpha blending makes light anti-aliased text on a dark background
-    look thinner than in a browser, whose rasteriser applies gamma/contrast to
-    glyph coverage. Raising coverage to 1/gamma restores the intended weight.
-    """
     return bytes(round(255 * (a / 255) ** (1 / gamma)) for a in range(256))
 
 
@@ -152,7 +121,6 @@ def _gamma_table(gamma: float) -> bytes:
 def _render(
     theme: Theme, role: str, size: int, content: str, color: RGB
 ) -> pygame.Surface:
-    """Text in a line box: height = ascender - descender, baseline fixed."""
     font = face(theme, role)
     ascender = font.get_sized_ascender(size)
     height = ascender - font.get_sized_descender(size)
@@ -176,7 +144,6 @@ def _render(
 
 @lru_cache(maxsize=4096)
 def _advance(theme: Theme, role: str, size: int, content: str) -> int:
-    """Pen advance of a string in device pixels (what layout should use)."""
     metrics = face(theme, role).get_metrics(content, size=size)
     return round(sum(item[4] for item in metrics if item is not None))
 
@@ -193,15 +160,13 @@ def has_glyphs(theme: Theme, role: str, content: str) -> bool:
 
 
 def blend(color: Color, under: RGB) -> RGB:
-    """Flatten an RGBA colour over an opaque background."""
     if len(color) == 3:
-        return color  # type: ignore[return-value]
+        return color[:3]
     alpha = color[3] / 255
     return tuple(round(c * alpha + u * (1 - alpha)) for c, u in zip(color[:3], under))
 
 
 def fade(color: Color, under: RGB, opacity: float) -> RGB:
-    """``color`` drawn at ``opacity`` over ``under`` (used for disabled UI)."""
     flat = blend(color, under)
     return tuple(round(c * opacity + u * (1 - opacity)) for c, u in zip(flat, under))
 
@@ -212,7 +177,6 @@ def clear_caches() -> None:
     face.cache_clear()
 
 
-# --------------------------------------------------------------------------
 # Painter
 
 
@@ -229,13 +193,12 @@ class Painter:
         self.scale = scale
         self.offset = offset
 
-    # -- geometry -----------------------------------------------------------
+    # Geometry
 
     def px(self, value: float) -> int:
         return int(round(value * self.scale))
 
     def width(self, value: float) -> int:
-        """Stroke width in device pixels, never thinner than one pixel."""
         return max(1, int(round(value * self.scale)))
 
     def point(self, x: float, y: float) -> tuple[int, int]:
@@ -267,7 +230,7 @@ class Painter:
         finally:
             self.surface.set_clip(previous)
 
-    # -- shapes -------------------------------------------------------------
+    # Shapes
 
     def _shape(self, color: Color, draw, area: pygame.Rect) -> None:
         if len(color) == 3 or color[3] == 255:
@@ -329,7 +292,6 @@ class Painter:
         radius: float,
         dash: tuple[int, int],
     ) -> None:
-        """Dashed rounded rectangle, dashes measured in logical pixels."""
         x, y, w, h = rect
         r = min(radius, w / 2, h / 2)
         path: list[tuple[float, float]] = []
@@ -364,7 +326,6 @@ class Painter:
                     left = float(on if drawing else off)
 
     def soft_shadow(self, rect, color: Color, radius: float, dy: float, blur: float):
-        """Cheap blurred shadow: a few concentric translucent layers."""
         alpha = color[3] if len(color) == 4 else 255
         steps = 5
         for i in range(steps):
@@ -373,13 +334,12 @@ class Painter:
             box = Box(rect).inflate(grow * 2, grow * 2).move(0, dy)
             self.fill(box, (*color[:3], layer_alpha), radius + max(0, grow))
 
-    # -- text ---------------------------------------------------------------
+    # Text
 
     def _font_px(self, size: float) -> int:
         return max(1, int(round(size * self.scale)))
 
     def _role(self, role: str, size: float) -> str:
-        """Small mono labels use the 500 weight so they stay legible."""
         if role == "mono" and size <= self.theme.metrics.mono_medium_max:
             return "mono_medium"
         return role
@@ -387,9 +347,6 @@ class Painter:
     def measure(self, content: str, size: float, role: str = "body") -> float:
         role = self._role(role, size)
         return _advance(self.theme, role, self._font_px(size), content) / self.scale
-
-    def line_height(self, size: float, role: str = "body", leading: float = 1.45):
-        return size * leading
 
     def text(
         self,
@@ -429,11 +386,6 @@ class Painter:
         return [self.ellipsize(item, size, width, role) for item in lines]
 
     def _avoid_orphan(self, lines: list, size: float, width: float, role: str):
-        """Like CSS ``text-wrap: pretty``: never end on one short lonely word.
-
-        If the last line is a single word of up to 3 characters ("1.", "C."),
-        pull the previous line's last word down so the pair reads together.
-        """
         if len(lines) < 2 or " " in lines[-1] or len(lines[-1]) > 3:
             return
         head, _, moved = lines[-2].rpartition(" ")
@@ -454,7 +406,6 @@ class Painter:
         valign: str = "top",
         max_lines: int | None = None,
     ) -> float:
-        """Wrap text into ``box``; returns the logical y below the last line."""
         x, y, w, h = box
         step = size * leading
         lines = self.wrap(content, size, w, role)
@@ -476,12 +427,10 @@ class Painter:
         return self.logical(rect)
 
 
-# --------------------------------------------------------------------------
 # 16px stroke icons (drawn, so they scale cleanly)
 
 
 def icon(p: Painter, name: str, x: float, y: float, color: Color, size: float = 16):
-    """Draw a line icon in the square (x, y, size, size)."""
     s = size / 16
     w = 1.6
 
