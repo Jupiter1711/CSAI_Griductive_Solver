@@ -64,7 +64,6 @@ class DPLLSolver(SATSolver):
         search = _Search(num_vars)
         satisfiable = search.run(prepared, assumed)
 
-
         stats = SolverStats(
             decisions=search.decisions,
             propagations=search.propagations,
@@ -88,11 +87,12 @@ class DPLLSolver(SATSolver):
 @dataclass(frozen=True)
 class _Prepared:
     """Validated CNF: duplicate literals removed, tautologies dropped."""
+
     num_vars: int
     has_empty_clause: bool
     units: tuple[int, ...]
-    clauses: tuple[tuple[int, ...], ...] 
-    order: tuple[int, ...]  #ascending id
+    clauses: tuple[tuple[int, ...], ...]
+    order: tuple[int, ...]  # ascending id
 
 
 def _prepare(cnf: CNF, num_vars: int) -> _Prepared:
