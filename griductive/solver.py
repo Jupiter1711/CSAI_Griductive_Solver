@@ -31,25 +31,6 @@ class SATSolver(ABC):
 
 
 class DPLLSolver(SATSolver):
-    """Iterative DPLL: two-watched-literal unit propagation, chronological
-    backtracking, no clause learning and no pure-literal elimination.
-
-    Branching is deterministic: the lowest unassigned variable id that occurs
-    in a clause, trying False (Innocent) before True (Criminal). Variables that
-    occur in no clause are reported as False without branching on them.
-
-    Stats follow docs/architecture.md:
-    - decisions: every value chosen for a trial branch, flipped branches included;
-    - propagations: variables newly assigned by unit propagation (unit clauses
-      included); assumptions are not counted;
-    - backtracks: every failed branch that is abandoned and undone.
-
-    The agent queries one KB many times with different assumptions, so the
-    validated, preprocessed form of the last CNF is reused when the very same
-    immutable tuple object is passed again. Search state, assumptions and stats
-    are always fresh per call.
-    """
-
     def __init__(self) -> None:
         self._cached: tuple[CNF, _Prepared] | None = None
 
