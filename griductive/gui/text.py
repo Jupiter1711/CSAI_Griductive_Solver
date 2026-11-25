@@ -1,10 +1,3 @@
-"""English wording for coordinates, clues and game outcomes. No pygame here.
-
-Clues stay structured in the engine and agent; this module only renders them
-for people, as the assignment allows ("the GUI may display natural-language
-versions").
-"""
-
 from griductive.models import (
     BinaryClue,
     BinaryKind,
@@ -16,7 +9,10 @@ from griductive.models import (
     CountKind,
     ExplicitRegion,
     FactClue,
+    IntersectionClue,
     NeighborRegion,
+    ParityClue,
+    ParityKind,
     Region,
     RowRegion,
     RunStatus,
@@ -24,20 +20,24 @@ from griductive.models import (
     SubmitResult,
     SubmitStatus,
 )
+from griductive.regions import column_label as column_letter
+from griductive.regions import format_cell as cell_label
 
+__all__ = [
+    "cell_label",
+    "character_name",
+    "column_letter",
+    "describe_clue",
+    "describe_region",
+    "run_status_message",
+    "submit_message",
+]
 
-def column_letter(col: int) -> str:
-    """0 -> A, 25 -> Z, 26 -> AA (spreadsheet style, as in the JSON format)."""
-    label, number = "", col + 1
-    while number:
-        number, remainder = divmod(number - 1, 26)
-        label = chr(ord("A") + remainder) + label
-    return label
-
-
-def cell_label(cell: Cell) -> str:
-    """Cell(1, 2) -> "C2": column letter, then 1-based row."""
-    return f"{column_letter(cell.col)}{cell.row + 1}"
+_QUANTITY = {
+    CountKind.EXACTLY: "exactly",
+    CountKind.AT_LEAST: "at least",
+    CountKind.AT_MOST: "at most",
+}
 
 
 def character_name(board: Board, cell: Cell) -> str:
@@ -56,7 +56,6 @@ def join_words(words: list[str]) -> str:
 
 
 def describe_region(region: Region, board: Board) -> str:
-    """Prepositional phrase: "in row 2", "among Goku's neighbors", ..."""
     if isinstance(region, RowRegion):
         return f"in row {region.row + 1}"
     if isinstance(region, ColumnRegion):
@@ -70,8 +69,11 @@ def describe_region(region: Region, board: Board) -> str:
     return f"in {type(region).__name__}"
 
 
+def _criminals(k: int) -> str:
+    return "criminal" if k == 1 else "criminals"
+
+
 def describe_clue(clue: Clue, board: Board) -> str:
-    """One English sentence for a structured clue."""
     if isinstance(clue, FactClue):
         name = character_name(board, clue.target)
         if clue.status is Status.CRIMINAL:
@@ -87,18 +89,24 @@ def describe_clue(clue: Clue, board: Board) -> str:
 
     if isinstance(clue, CountClue):
         where = describe_region(clue.region, board)
-        noun = "criminal" if clue.k == 1 else "criminals"
         if clue.kind is CountKind.EXACTLY and clue.k == 0:
             return f"There are no criminals {where}."
-        quantity = {
-            CountKind.EXACTLY: "exactly",
-            CountKind.AT_LEAST: "at least",
-            CountKind.AT_MOST: "at most",
-        }[clue.kind]
         verb = "is" if clue.k == 1 else "are"
-        return f"There {verb} {quantity} {clue.k} {noun} {where}."
+        quantity = _QUANTITY[clue.kind]
+        return f"There {verb} {quantity} {clue.k} {_criminals(clue.k)} {where}."
 
-    # Extension clue types get a readable fallback until they add wording here.
+    if isinstance(clue, ParityClue):
+        where = describe_region(clue.region, board)
+        parity = "even" if clue.kind is ParityKind.EVEN else "odd"
+        return f"There is an {parity} number of criminals {where}."
+
+    if isinstance(clue, IntersectionClue):
+        where = join_words([describe_region(r, board) for r in clue.regions])
+        if clue.k == 0:
+            return f"No criminal is {where}."
+        verb = "is" if clue.k == 1 else "are"
+        return f"Exactly {clue.k} {_criminals(clue.k)} {verb} {where}."
+
     return f"{type(clue).__name__} clue {getattr(clue, 'id', '')}".strip()
 
 
@@ -113,7 +121,6 @@ def opposite(status: Status) -> Status:
 def submit_message(
     result: SubmitResult, board: Board, cell: Cell, status: Status
 ) -> str:
-    """Explain a judge result in one line. Never mentions hidden information."""
     who = f"{character_name(board, cell)} ({cell_label(cell)})"
     kind = result.status
     if kind is SubmitStatus.ACCEPTED:

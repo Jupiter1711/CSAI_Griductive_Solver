@@ -1,5 +1,3 @@
-"""Cells a revealed clue talks about, for highlighting. No pygame here."""
-
 from dataclasses import dataclass
 
 from griductive.models import (
@@ -9,19 +7,16 @@ from griductive.models import (
     Clue,
     CountClue,
     FactClue,
+    IntersectionClue,
     NeighborRegion,
+    ParityClue,
+    Region,
 )
 from griductive.regions import RegionResolver
 
 
 @dataclass(frozen=True)
 class ClueFocus:
-    """counted: cells the clue constrains; anchors: cells it only names.
-
-    For "2 criminals among Goku's neighbors", the neighbors are counted and
-    Goku is an anchor (named, but not counted). Both are row-major.
-    """
-
     counted: tuple[Cell, ...]
     anchors: tuple[Cell, ...] = ()
 
@@ -30,30 +25,31 @@ class ClueFocus:
         return frozenset(self.counted) | frozenset(self.anchors)
 
 
+def _anchors(regions: tuple[Region, ...]) -> tuple[Cell, ...]:
+    return tuple(sorted({r.cell for r in regions if isinstance(r, NeighborRegion)}))
+
+
 def clue_focus(clue: Clue, board: Board, regions: RegionResolver) -> ClueFocus:
-    """Resolve the cells referenced by a clue; ValueError for a bad region."""
     if isinstance(clue, FactClue):
         return ClueFocus((clue.target,))
     if isinstance(clue, BinaryClue):
         return ClueFocus(tuple(sorted({clue.left, clue.right})))
-    if isinstance(clue, CountClue):
+    if isinstance(clue, (CountClue, ParityClue)):
         counted = regions.resolve(clue.region, board)
-        anchors: tuple[Cell, ...] = ()
-        if isinstance(clue.region, NeighborRegion):
-            anchors = (clue.region.cell,)
-        return ClueFocus(tuple(counted), anchors)
-    # Extension clues highlight nothing until they declare their cells.
+        return ClueFocus(tuple(counted), _anchors((clue.region,)))
+    if isinstance(clue, IntersectionClue):
+        if not clue.regions:
+            return ClueFocus(())
+        shared = set(regions.resolve(clue.regions[0], board))
+        for region in clue.regions[1:]:
+            shared &= set(regions.resolve(region, board))
+        return ClueFocus(tuple(sorted(shared)), _anchors(clue.regions))
     return ClueFocus(())
 
 
 def related_clue(
     cell: Cell, clues: tuple[Clue, ...], board: Board, regions: RegionResolver
 ) -> Clue | None:
-    """First revealed clue (in the given order) that mentions ``cell``.
-
-    Used by Hint to point at relevant public evidence. It only looks at
-    revealed clues, so it never leaks hidden information.
-    """
     for clue in clues:
         try:
             if cell in clue_focus(clue, board, regions).cells:
