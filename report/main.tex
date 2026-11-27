@@ -114,12 +114,12 @@ Bài toán phù hợp để áp dụng các phương pháp suy diễn tự độ
 \begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.3}
-\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}clp{0.44\textwidth}c@{}}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}clp{0.42\textwidth}c@{}}
 \toprule
 \textbf{STT} & \textbf{Họ và tên} & \textbf{Công việc phụ trách} & \textbf{Hoàn thành} \\
 \midrule
 1 & Nguyễn Huỳnh Hải Long & \textit{[Điền công việc phụ trách]} & \textit{[...\%]} \\
-2 & Ngô Quang Minh        & \textit{[Điền công việc phụ trách]} & \textit{[...\%]} \\
+2 & Ngô Quang Minh        & Hiện thực Game Engine và bộ đánh giá ngữ nghĩa trực tiếp, viết kiểm thử và đối chiếu với bộ mã hóa CNF. & \textit{[100\%]} \\
 3 & Võ Tấn Lợi            & \textit{[Điền công việc phụ trách]} & \textit{[...\%]} \\
 4 & Hồ Trần Quốc Thắng    & \textit{[Điền công việc phụ trách]} & \textit{[...\%]} \\
 5 & Nguyễn Lê Khánh Toàn  & \textit{[Điền công việc phụ trách]} & \textit{[...\%]} \\
@@ -133,10 +133,22 @@ Bài toán phù hợp để áp dụng các phương pháp suy diễn tự độ
 \section{Thiết kế hệ thống và Hiện thực trò chơi}
 
 \subsection{Kiến trúc mã nguồn và Tách biệt vai trò (Role Separation)}
-\textit{[Mô tả tổ chức thư mục mã nguồn, định dạng tệp dữ liệu màn chơi và nguyên tắc tách biệt độc lập giữa \texttt{Game Engine} (quản lý đáp án và thẻ úp) với \texttt{Logic Agent} (chỉ tiếp nhận tri thức công khai $KB_t$).]}
+Mã nguồn nằm trong gói \texttt{griductive/}. Các màn chơi trong \texttt{puzzles/} dùng JSON để lưu kích thước lưới, nhân vật, manh mối, đáp án và danh sách ô mở ban đầu. \texttt{GridGameEngine} giữ toàn bộ màn chơi, gọi bộ kiểm định trước khi nạp và chỉ cập nhật trạng thái sau khi màn chơi qua kiểm định.
+
+Ở lượt $t$, \texttt{PublicState} chỉ chứa thông tin bàn chơi, phán quyết đã xác nhận và manh mối của các thẻ đang mở. Tác tử nhận trạng thái này để xây dựng $KB_t$. Các phán quyết và manh mối của thẻ úp được giữ trong trạng thái riêng của engine.
+
+Khi nhận phán quyết, engine kiểm tra tính nhất quán của $KB_t$ và dùng bộ suy diễn để phân loại ô được chọn. Nếu cả hai trạng thái còn khả dĩ, engine trả về \texttt{NOT\_PROVABLE}. Nếu trạng thái đối lập là hệ quả logic, engine trả về \texttt{CONTRADICTED}. Nếu phán quyết là hệ quả logic, engine đối chiếu với đáp án đã lưu rồi công bố phán quyết và manh mối của ô trong cùng một lần cập nhật. Bàn chơi giữ nguyên khi phán quyết bị từ chối. Chức năng chơi lại phục hồi các ô mở ban đầu.
 
 \subsection{Bộ đánh giá ngữ nghĩa trực tiếp (Direct Semantic Evaluator)}
-\textit{[Trình bày cách cài đặt hàm kiểm tra trực tiếp tính đúng/sai của từng loại manh mối trên một phép gán đầy đủ (không thông qua CNF) để đối chiếu và kiểm chứng tính chính xác của bộ mã hóa.]}
+\texttt{DirectClueEvaluator} nhận một manh mối, thông tin bàn chơi và một phép gán trạng thái đầy đủ. Hàm kiểm tra kích thước, tọa độ, kiểu trạng thái và tham số liên quan, sau đó đánh giá trực tiếp bằng phép so sánh hoặc đếm. Đầu vào không hợp lệ gây lỗi \texttt{ValueError}. Kết quả Boolean cho biết phép gán có thỏa mãn manh mối hay không.
+
+\begin{itemize}
+    \item \texttt{FACT} so sánh trạng thái tại ô đích với trạng thái yêu cầu. \texttt{SAME} và \texttt{DIFFERENT} kiểm tra hai ô có cùng hay khác trạng thái.
+    \item \texttt{EXACTLY}, \texttt{AT\_LEAST} và \texttt{AT\_MOST} đếm số ô \emph{Criminal} trong vùng rồi so sánh kết quả với ngưỡng $k$ theo thứ tự $=k$, $\ge k$ và $\le k$.
+    \item Manh mối chẵn lẻ kiểm tra số ô \emph{Criminal} theo modulo $2$. Manh mối giao vùng lấy giao của các vùng trước khi kiểm tra số ô \emph{Criminal} có đúng bằng $k$ hay không.
+\end{itemize}
+
+Bộ đánh giá chạy độc lập với bộ mã hóa và bộ giải SAT. Kiểm thử đối chiếu duyệt cả 16 phép gán trên bàn $2 \times 2$ cho mỗi trường hợp manh mối được chọn. Với từng phép gán, kiểm thử cố định các biến chính trong CNF và kiểm tra có tồn tại giá trị cho các biến phụ để thỏa mãn CNF hay không. Kết quả này phải trùng với kết quả đánh giá trực tiếp. Các trường hợp được chọn bao gồm hai mẫu mở rộng và trường hợp giao vùng rỗng.
 
 \subsection{Giao diện đồ họa (GUI)}
 \textit{[Mô tả thiết kế giao diện, đính kèm ảnh chụp màn hình minh họa và giải thích các chức năng tương tác (hiển thị lưới nhân vật, tô sáng vùng manh mối khi chọn, phân biệt lỗi phán quyết, cùng các nút \texttt{Load}, \texttt{Restart}, \texttt{Hint}, \texttt{Auto Solve}).]}
@@ -154,7 +166,7 @@ Bài toán phù hợp để áp dụng các phương pháp suy diễn tự độ
 
 \subsection{Chuyển đổi tự động sang Dạng chuẩn Hội (CNF Encoding)}
 
-\subsubsection{Cơ chế xây dựng cơ sở tri thức $KB_t$}
+\subsubsection{Cơ chế xây dựng cơ sở tri thức \texorpdfstring{$KB_t$}{KB\_t}}
 \textit{[Giải thích quy trình chuyển đổi tự động manh mối sang tập mệnh đề tuyển, biểu diễn các phán quyết đã biết thành mệnh đề đơn vị để tạo $KB_t$, và cách thống kê số biến chính, biến phụ, số mệnh đề CNF.]}
 
 \subsubsection{Ví dụ dẫn xuất CNF cho manh mối nhị phân và manh mối đếm}
