@@ -183,8 +183,9 @@ puzzle 3×3 và 4×4; 5×5 là stress case tùy chọn.
 - CSV gồm puzzle_id, variant, outcome, terminal_status, runtime_s, error và các
   trường metrics; giá trị chưa đo để trống. Không ghi đè file cũ âm thầm.
 
-Hai extension, bộ puzzle thật, benchmark implementation và người phụ trách
-uniqueness cần nhóm chốt sau. Không cài thêm thư viện SAT để thay DPLL tự viết.
+Benchmark dùng `GriductiveBenchmarkRunner` trong `benchmark.py`. Lệnh
+`python main.py --benchmark ket-qua.csv` chạy cùng cấu hình DPLL với GUI trên
+thư mục `puzzles/`. Nhánh `report` lưu số đo của lần chạy tại `report/benchmark.csv`.
 
 ## Kiểm chứng khung và tiêu chí cho implementation
 

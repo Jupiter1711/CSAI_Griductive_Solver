@@ -64,6 +64,23 @@ python main.py --puzzle puzzles/4x4-01.json
 Phím tắt: mũi tên chọn ô, `I`/`C` kết luận Innocent/Criminal, `H` gợi ý,
 `A` tự giải, `R` chơi lại, `L` mở danh sách puzzle.
 
+## Chạy benchmark
+
+```bash
+python main.py --benchmark ket-qua.csv
+python main.py --benchmark mot-man.csv --puzzle puzzles/3x3-01.json --timeout 30
+```
+
+Lệnh đầu chạy lần lượt mọi file JSON trong `puzzles/` bằng DPLL và tạo một CSV mới.
+Mỗi màn chạy trong một tiến trình riêng. Giới hạn mặc định là 30 giây cho khởi tạo
+và 30 giây cho suy diễn. `runtime_s` chỉ đo vòng suy diễn, gồm cả Agent và Judge.
+CSV lưu số biến chính, số biến phụ và mệnh đề cao nhất, tổng lượt gọi SAT,
+decisions, propagations, backtracks và số lần mở thẻ thành công.
+Đọc `terminal_status` để phân biệt `SOLVED` với `STUCK`. Màn lỗi hoặc quá hạn
+vẫn có dòng kết quả (`ERROR` hoặc `TIMEOUT`), các số đếm chưa thu được để trống.
+Chọn tên file mới cho mỗi lần đo. Nhánh `report` lưu kết quả dùng trong báo cáo
+tại `report/benchmark.csv`.
+
 ## Quy trình trước khi commit
 
 Mỗi lần mở terminal mới, nhớ **kích hoạt venv trước**:
