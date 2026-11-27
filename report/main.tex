@@ -5,6 +5,8 @@
 \usepackage[english,vietnamese]{babel}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{float}
@@ -184,52 +186,76 @@ Bộ đánh giá chạy độc lập với bộ mã hóa và bộ giải SAT. Ki
 \textit{[Trình bày thuật toán sử dụng mệnh đề chặn nghiệm (\emph{blocking clause}) trên tập manh mối đầy đủ để kiểm tra xem màn chơi có tồn tại duy nhất một nghiệm hay bị mơ hồ/vô nghiệm.]}
 
 % ==================== PHẦN 5 ====================
+\clearpage
 \section{Thực nghiệm và Đánh giá}
+\subsection{Thiết lập phép đo}
+Bộ thử gồm chín màn trong \texttt{puzzles/}, cũng là các màn trong danh sách Load của game. Mỗi kích thước có ba màn. Mỗi màn chạy một lần trong tiến trình riêng trên Linux x86-64, CPU AMD Ryzen 7 6800H, Python 3.11.15, dùng cùng bộ mã hóa CNF và bộ giải DPLL. Lệnh tái lập là \texttt{python main.py --benchmark ket-qua.csv --timeout 30}. File \texttt{report/benchmark.csv} lưu số liệu gốc.
 
-\subsection{Thiết lập thực nghiệm và Dữ liệu kiểm thử}
-\textit{[Mô tả cấu hình môi trường thực nghiệm, phân nhóm bộ dữ liệu kiểm thử theo kích thước ($3 \times 3$, $4 \times 4$, $5 \times 5$) và liệt kê đầy đủ 6 chỉ số đánh giá bắt buộc theo đề bài.]}
+Đồng hồ bắt đầu sau khi nạp và kiểm định puzzle, dừng ngay khi vòng suy diễn trả về. Mỗi bước tính cả truy vấn SAT để Agent chọn nước đi và truy vấn SAT để Engine chấm nước đó. Một bước được tính khi Engine chấp nhận mở thẻ. Số biến phụ và số mệnh đề là giá trị lớn nhất trong các KB đã truy vấn. Giới hạn suy diễn là 30 giây cho mỗi màn; cả chín màn đều đạt \texttt{SOLVED} trong thời hạn.
 
-\subsection{Bảng tổng hợp kết quả thực nghiệm}
-\textit{[Điền kết quả thực nghiệm trung bình theo nhóm kích thước và chi tiết từng màn chơi vào Bảng~\ref{tab:benchmark_summary} và Bảng~\ref{tab:benchmark_detailed}, ghi nhận trung thực cả các trường hợp thất bại hoặc quá thời gian (timeout) nếu có.]}
-
+\subsection{Kết quả theo kích thước}
 \begin{table}[H]
-\centering
-\small
-\setlength{\tabcolsep}{0pt}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lrrrrrrr@{}}
+\centering\small
+\begin{tabular}{@{}lrrrrrr@{}}
 \toprule
-\textbf{Kích thước} & \textbf{Solved} & \textbf{Vars (P/A)} & \textbf{Clauses} & \textbf{SAT Calls} & \textbf{Dec / Prop / Back} & \textbf{Steps} & \textbf{Time (ms)} \\
+Bàn & Giải hết & Biến phụ & Mệnh đề & Lượt SAT & Bước & Thời gian (ms) \\
 \midrule
-$3 \times 3$ & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} \\
-$4 \times 4$ & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} \\
-$5 \times 5$ & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} \\
+$3 \times 3$ & 3/3 & 24.0 & 94.0 & 127.3 & 7.0 & 5.96 \\
+$4 \times 4$ & 3/3 & 110.7 & 414.0 & 448.0 & 14.0 & 51.95 \\
+$5 \times 5$ & 3/3 & 261.7 & 977.7 & 1028.7 & 21.7 & 319.10 \\
+
 \bottomrule
-\end{tabular*}
-\caption{Bảng tổng hợp kết quả thực nghiệm trung bình theo kích thước bàn chơi.}
+\end{tabular}
+\caption{Trung bình cộng trên ba màn của mỗi kích thước.}
 \label{tab:benchmark_summary}
 \end{table}
-
+\subsection{Kết quả từng màn}
 \begin{table}[H]
-\centering
-\renewcommand{\arraystretch}{1.18}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{@{}llrrrrrrr@{}}
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrrrrrrr@{}}
 \toprule
-\textbf{Màn chơi} & \textbf{Kích thước} & \textbf{Vars (P/A)} & \textbf{Clauses} & \textbf{SAT Calls} & \textbf{Dec / Prop / Back} & \textbf{Steps} & \textbf{Time (ms)} & \textbf{Trạng thái} \\
+Màn & Biến C/P & Mệnh đề & Lượt SAT & Chọn & Lan truyền & Quay lui & Bước & ms \\
 \midrule
-\textit{[Level 1]} & $3 \times 3$ & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[...]} & \textit{[OK/Timeout]} \\
+\texttt{3x3-01} & 9/19 & 78 & 160 & 0 & 2274 & 0 & 8 & 6.93 \\
+\texttt{3x3-02} & 9/28 & 111 & 126 & 0 & 1546 & 0 & 7 & 5.42 \\
+\texttt{3x3-03} & 9/25 & 93 & 96 & 0 & 1770 & 0 & 6 & 5.53 \\
+\texttt{4x4-hard} & 16/105 & 385 & 448 & 242 & 18228 & 24 & 14 & 43.53 \\
+\texttt{4x4-02} & 16/125 & 471 & 448 & 768 & 26256 & 0 & 14 & 69.78 \\
+\texttt{4x4-03} & 16/102 & 386 & 448 & 148 & 17458 & 0 & 14 & 42.55 \\
+\texttt{5x5-01} & 25/179 & 666 & 1150 & 916 & 86626 & 0 & 23 & 218.45 \\
+\texttt{5x5-02} & 25/332 & 1246 & 880 & 1496 & 145006 & 84 & 20 & 380.68 \\
+\texttt{5x5-03} & 25/274 & 1021 & 1056 & 4160 & 137682 & 580 & 22 & 358.17 \\
+
 \bottomrule
-\end{tabular}}
-\caption{Bảng kết quả thực nghiệm chi tiết trên từng màn chơi kiểm thử.}
+\end{tabular}
+\caption{C/P là số biến chính/phụ. Tên màn lấy từ trường \texttt{id} sau tiền tố \texttt{puzzle-}; màn \texttt{4x4-hard} nằm trong file \texttt{4x4-01.json}.}
 \label{tab:benchmark_detailed}
 \end{table}
 
-\subsection{Biểu đồ trực quan hóa hiệu năng}
-\textit{[Chèn các biểu đồ trực quan hóa và so sánh thời gian chạy, số lượng mệnh đề CNF, số lần gọi SAT và số bước quay lui giữa các màn chơi.]}
+\subsection{Thời gian suy diễn}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.97\linewidth, height=5.3cm,
+    ybar, bar width=12pt, ymin=0, ymax=400, ytick distance=100,
+    ylabel={Thời gian (ms)}, ymajorgrids, axis lines=left,
+    xtick={0,...,8}, xticklabels={3x3-01,3x3-02,3x3-03,4x4-01,4x4-02,4x4-03,5x5-01,5x5-02,5x5-03},
+    xticklabel style={font=\scriptsize}, enlarge x limits=0.08,
+]
+\addplot[draw=blue!65!black,fill=blue!45] table[
+    col sep=comma, x expr=\coordindex, y expr=1000*\thisrow{runtime_s}
+] {benchmark.csv};
+\end{axis}
+\end{tikzpicture}
+\caption{Thời gian suy diễn của từng file trong \texttt{puzzles/}.}
+\end{figure}
 
-\subsection{Nhận xét, Thảo luận và Hạn chế}
-\textit{[Phân tích hiệu quả của lan truyền đơn vị, mức độ tăng trưởng mệnh đề CNF trên bàn cờ lớn, nguyên nhân các trường hợp chậm/thất bại (nếu có) và đề xuất hướng cải tiến.]}
+\subsection{Nhận xét}
+Trên cả ba màn $3\times3$, lan truyền đơn vị và kiểm tra mâu thuẫn đủ để trả lời mọi truy vấn SAT. Ba màn $4\times4$ đều cần 14 bước và 448 lượt gọi SAT. Riêng màn \texttt{4x4-02} có KB đạt 471 mệnh đề và ghi nhận 26\,256 lần lan truyền, cao nhất nhóm. Thời gian đo được cũng dài nhất nhóm.
+
+Trên bàn $5\times5$, màn \texttt{5x5-02} chỉ cần 20 bước nhưng mất nhiều thời gian nhất trong bộ thử. Màn này có 1\,246 mệnh đề ở bước lớn nhất và 145\,006 lần lan truyền. Màn \texttt{5x5-03} có nhiều lần quay lui nhất (580). Chỉ đếm số thẻ mở không phản ánh được chi phí của từng truy vấn SAT. Thời gian trong bảng là một lần đo trên một máy; mức dao động giữa các lần chạy chưa được khảo sát.
 
 % ==================== PHẦN 6 ====================
 \section{Video Demo}
