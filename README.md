@@ -64,6 +64,17 @@ python main.py --puzzle puzzles/4x4-01.json
 Phím tắt: mũi tên chọn ô, `I`/`C` kết luận Innocent/Criminal, `H` gợi ý,
 `A` tự giải, `R` chơi lại, `L` mở danh sách puzzle.
 
+### Bộ puzzle chính thức
+
+`puzzles/` chứa 9 màn chính thức, mỗi kích thước 3×3, 4×4 và 5×5 có 3 màn.
+GUI và benchmark mặc định dùng thư mục này. CI chạy bộ giải từ các thẻ mở ban đầu
+của từng màn và kiểm tra cả 9 màn đạt `SOLVED` với đáp án đúng.
+
+`data/` lưu các phiên bản tham khảo. Bốn màn `3x3-02`, `3x3-03`, `5x5-02` và
+`5x5-03` có cùng ID với bản chính thức nhưng khác danh sách thẻ mở ban đầu
+(`initially_revealed`), nên bộ giải dừng ở `STUCK`. Khi tái lập số liệu báo cáo,
+dùng các file trong `puzzles/`.
+
 ## Chạy benchmark
 
 ```bash
