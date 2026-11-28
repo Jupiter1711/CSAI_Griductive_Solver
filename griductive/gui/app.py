@@ -187,7 +187,7 @@ class GriductiveWindow:
             self._move_focus(-1 if mod & pygame.KMOD_SHIFT else 1)
             return True
         if key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE):
-            if self.focus_visible and self.focus_key in self.hits:
+            if self.focus_visible and self.focus_key in self._focus_order():
                 self._activate(self.focus_key)
             return True
         if self.picker_open:
@@ -313,6 +313,8 @@ class GriductiveWindow:
         self.picker_files = list(files)
         self.picker_scroll = 0
         self.picker_open = True
+        self.focus_key = None
+        self.focus_visible = False
 
     def _picker_rows(self) -> int:
         return max(1, int((self.m.canvas[1] - 2 * self.m.padding - 118) // 60))

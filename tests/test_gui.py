@@ -1,5 +1,6 @@
 """GUI tests: wording, highlighting, controller flow and a headless window smoke."""
 
+import json
 import os
 import subprocess
 import sys
@@ -331,6 +332,23 @@ def test_stop_auto_solve_between_steps():
     assert ctl.message.kind is MessageKind.INFO
 
 
+def test_load_and_restart_fully_revealed_game(tmp_path):
+    data = json.loads(PUZZLE_3X3.read_text(encoding="utf-8"))
+    data["initially_revealed"] = list(data["solution"])
+    path = tmp_path / "solved.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    ctl = loaded()
+    assert ctl.load(path)
+    ctl.wait()
+    for restart in (False, True):
+        if restart:
+            assert ctl.restart()
+            ctl.wait()
+        assert ctl.run_status is RunStatus.SOLVED
+        assert ctl.message.kind is MessageKind.SOLVED
+        assert ctl.elapsed() == 0
+
+
 def test_only_one_job_at_a_time():
     ctl = make_controller(delay=0.3)
     ctl.load(PUZZLE_3X3)
@@ -375,7 +393,6 @@ def test_stale_hint_is_dropped_after_state_changes():
 
 @pytest.fixture
 def window():
-    pytest.importorskip("pygame")
     os.environ["SDL_VIDEODRIVER"] = "dummy"
     from griductive.gui.app import GriductiveWindow
 
@@ -403,7 +420,8 @@ def test_window_renders_and_clicks_select(window):
 
 @pytest.mark.parametrize("preloaded", [False, True])
 def test_mouse_click_in_picker_loads_puzzle(preloaded):
-    pygame = pytest.importorskip("pygame")
+    import pygame
+
     os.environ["SDL_VIDEODRIVER"] = "dummy"
     from griductive.gui.app import GriductiveWindow
 
@@ -485,6 +503,32 @@ def test_tab_focus_cycles_buttons_and_enter_activates(window):
     assert window.focus_visible and window.focus_key == "load"
     window.key(pygame.K_RETURN)
     assert window.picker_open
+
+
+@pytest.mark.parametrize("key", ["K_RETURN", "K_SPACE", "K_KP_ENTER"])
+def test_load_picker_cannot_activate_restart(window, key):
+    import pygame
+
+    ctl = window.ctl
+    ctl.select_cell(Cell(0, 1))
+    assert ctl.submit(Status.INNOCENT)
+    ctl.wait()
+    before = ctl.state
+    assert len(before.verdicts) == 2
+    window.frame()
+    window.key(pygame.K_TAB)
+    window.key(pygame.K_TAB)
+    assert window.focus_key == "restart"
+    window.key(pygame.K_l)
+    window.frame()
+    window.key(getattr(pygame, key))
+    ctl.wait()
+    assert window.picker_open and ctl.state is before
+    window.key(pygame.K_TAB)
+    window.key(pygame.K_TAB)
+    window.key(getattr(pygame, key))
+    ctl.wait()
+    assert not window.picker_open and ctl.puzzle_name == "3x3-02"
 
 
 def test_text_wrap_avoids_single_short_orphan(window):

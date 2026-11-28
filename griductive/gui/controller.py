@@ -195,7 +195,7 @@ class GameController:
     def elapsed(self) -> float:
         if self.started_at is None:
             return 0.0
-        end = self.finished_at or time.monotonic()
+        end = self.finished_at if self.finished_at is not None else time.monotonic()
         return max(0.0, end - self.started_at)
 
     def can_submit(self) -> bool:
@@ -414,7 +414,7 @@ class GameController:
         self._set_state(state)
         self.puzzle_name = name
         self.started_at = time.monotonic()
-        self.finished_at = None
+        self.finished_at = self.started_at if self.solved else None
         self.rejection = None
         self.selected_cell = None
         self.selected_clue_id = None
@@ -422,6 +422,9 @@ class GameController:
         self.run_status = RunStatus.SOLVED if self.solved else RunStatus.RUNNING
         self.log = [f"{verb} {name}: {len(state.clues)} clue(s) face-up."]
         self._steps = 0
+        if self.solved:
+            self._set_message(MessageKind.SOLVED, run_status_message(RunStatus.SOLVED))
+            return
         self._set_message(
             MessageKind.INFO,
             f"{verb} {name}. Pick a card and call CRIMINAL or INNOCENT.",
