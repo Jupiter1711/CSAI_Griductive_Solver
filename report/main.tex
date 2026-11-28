@@ -189,9 +189,9 @@ Bộ đánh giá chạy độc lập với bộ mã hóa và bộ giải SAT. Ki
 \clearpage
 \section{Thực nghiệm và Đánh giá}
 \subsection{Thiết lập phép đo}
-Bộ thử gồm chín màn trong \texttt{puzzles/}, cũng là các màn trong danh sách Load của game. Mỗi kích thước có ba màn. Mỗi màn chạy một lần trong tiến trình riêng trên Linux x86-64, CPU AMD Ryzen 7 6800H, Python 3.11.15, dùng cùng bộ mã hóa CNF và bộ giải DPLL. Lệnh tái lập là \texttt{python main.py --benchmark ket-qua.csv --timeout 30}. File \texttt{report/benchmark.csv} lưu số liệu gốc.
+Bộ thử gồm 10 màn chính thức trong \texttt{puzzles/} tại commit \texttt{0ee67a6}, cũng là các màn trong danh sách Load của game. Có ba màn $3\times3$, bốn màn $4\times4$ và ba màn $5\times5$. Mỗi màn chạy một lần trong tiến trình riêng trên Linux x86-64, CPU AMD Ryzen 7 6800H, Python 3.11.15, dùng cùng bộ mã hóa CNF và bộ giải DPLL. Lệnh tái lập là \verb|python main.py --benchmark ket-qua.csv --timeout 30|. File \texttt{report/benchmark.csv} lưu số liệu gốc.
 
-Đồng hồ bắt đầu sau khi nạp và kiểm định puzzle, dừng ngay khi vòng suy diễn trả về. Mỗi bước tính cả truy vấn SAT để Agent chọn nước đi và truy vấn SAT để Engine chấm nước đó. Một bước được tính khi Engine chấp nhận mở thẻ. Số biến phụ và số mệnh đề là giá trị lớn nhất trong các KB đã truy vấn. Giới hạn suy diễn là 30 giây cho mỗi màn; cả chín màn đều đạt \texttt{SOLVED} trong thời hạn.
+Đồng hồ bắt đầu sau khi nạp và kiểm định puzzle, dừng ngay khi vòng suy diễn trả về. Mỗi bước tính cả truy vấn SAT để Agent chọn nước đi và truy vấn SAT để Engine chấm nước đó. Một bước được tính khi Engine chấp nhận mở thẻ. Số biến phụ và số mệnh đề là giá trị lớn nhất trong các KB đã truy vấn. Giới hạn suy diễn là 30 giây cho mỗi màn. Cả 10 màn đều đạt \texttt{SOLVED} trong thời hạn.
 
 \subsection{Kết quả theo kích thước}
 \begin{table}[H]
@@ -200,13 +200,12 @@ Bộ thử gồm chín màn trong \texttt{puzzles/}, cũng là các màn trong d
 \toprule
 Bàn & Giải hết & Biến phụ & Mệnh đề & Lượt SAT & Bước & Thời gian (ms) \\
 \midrule
-$3 \times 3$ & 3/3 & 24.0 & 94.0 & 127.3 & 7.0 & 5.96 \\
-$4 \times 4$ & 3/3 & 110.7 & 414.0 & 448.0 & 14.0 & 51.95 \\
-$5 \times 5$ & 3/3 & 261.7 & 977.7 & 1028.7 & 21.7 & 319.10 \\
-
+$3 \times 3$ & 3/3 & 24.0 & 94.0 & 127.3 & 7.0 & 5.89 \\
+$4 \times 4$ & 4/4 & 95.2 & 362.5 & 448.0 & 14.0 & 49.53 \\
+$5 \times 5$ & 3/3 & 261.7 & 977.7 & 1028.7 & 21.7 & 329.17 \\
 \bottomrule
 \end{tabular}
-\caption{Trung bình cộng trên ba màn của mỗi kích thước.}
+\caption{Số màn giải hết và giá trị trung bình mỗi màn theo kích thước bàn.}
 \label{tab:benchmark_summary}
 \end{table}
 \subsection{Kết quả từng màn}
@@ -217,19 +216,19 @@ $5 \times 5$ & 3/3 & 261.7 & 977.7 & 1028.7 & 21.7 & 319.10 \\
 \toprule
 Màn & Biến C/P & Mệnh đề & Lượt SAT & Chọn & Lan truyền & Quay lui & Bước & ms \\
 \midrule
-\texttt{3x3-01} & 9/19 & 78 & 160 & 0 & 2274 & 0 & 8 & 6.93 \\
-\texttt{3x3-02} & 9/28 & 111 & 126 & 0 & 1546 & 0 & 7 & 5.42 \\
-\texttt{3x3-03} & 9/25 & 93 & 96 & 0 & 1770 & 0 & 6 & 5.53 \\
-\texttt{4x4-hard} & 16/105 & 385 & 448 & 242 & 18228 & 24 & 14 & 43.53 \\
-\texttt{4x4-02} & 16/125 & 471 & 448 & 768 & 26256 & 0 & 14 & 69.78 \\
-\texttt{4x4-03} & 16/102 & 386 & 448 & 148 & 17458 & 0 & 14 & 42.55 \\
-\texttt{5x5-01} & 25/179 & 666 & 1150 & 916 & 86626 & 0 & 23 & 218.45 \\
-\texttt{5x5-02} & 25/332 & 1246 & 880 & 1496 & 145006 & 84 & 20 & 380.68 \\
-\texttt{5x5-03} & 25/274 & 1021 & 1056 & 4160 & 137682 & 580 & 22 & 358.17 \\
-
+\texttt{3x3-01} & 9/19 & 78 & 160 & 0 & 2274 & 0 & 8 & 6.89 \\
+\texttt{3x3-02} & 9/28 & 111 & 126 & 0 & 1546 & 0 & 7 & 5.28 \\
+\texttt{3x3-03} & 9/25 & 93 & 96 & 0 & 1770 & 0 & 6 & 5.49 \\
+\texttt{4x4-01} & 16/105 & 385 & 448 & 242 & 18228 & 24 & 14 & 45.16 \\
+\texttt{4x4-02} & 16/125 & 471 & 448 & 768 & 26256 & 0 & 14 & 73.06 \\
+\texttt{4x4-03} & 16/102 & 386 & 448 & 148 & 17458 & 0 & 14 & 47.29 \\
+\texttt{4x4-04} & 16/49 & 208 & 448 & 210 & 11194 & 6 & 14 & 32.62 \\
+\texttt{5x5-01} & 25/179 & 666 & 1150 & 916 & 86626 & 0 & 23 & 233.54 \\
+\texttt{5x5-02} & 25/332 & 1246 & 880 & 1496 & 145006 & 84 & 20 & 394.12 \\
+\texttt{5x5-03} & 25/274 & 1021 & 1056 & 4160 & 137682 & 580 & 22 & 359.86 \\
 \bottomrule
 \end{tabular}
-\caption{C/P là số biến chính/phụ. Tên màn lấy từ trường \texttt{id} sau tiền tố \texttt{puzzle-}; màn \texttt{4x4-hard} nằm trong file \texttt{4x4-01.json}.}
+\caption{C/P là số biến chính/phụ.}
 \label{tab:benchmark_detailed}
 \end{table}
 
@@ -239,9 +238,9 @@ Màn & Biến C/P & Mệnh đề & Lượt SAT & Chọn & Lan truyền & Quay lu
 \begin{tikzpicture}
 \begin{axis}[
     width=0.97\linewidth, height=5.3cm,
-    ybar, bar width=12pt, ymin=0, ymax=400, ytick distance=100,
+    ybar, bar width=12pt, ymin=0, ymax=450, ytick distance=100,
     ylabel={Thời gian (ms)}, ymajorgrids, axis lines=left,
-    xtick={0,...,8}, xticklabels={3x3-01,3x3-02,3x3-03,4x4-01,4x4-02,4x4-03,5x5-01,5x5-02,5x5-03},
+    xtick=data, xticklabels={3x3-01,3x3-02,3x3-03,4x4-01,4x4-02,4x4-03,4x4-04,5x5-01,5x5-02,5x5-03},
     xticklabel style={font=\scriptsize}, enlarge x limits=0.08,
 ]
 \addplot[draw=blue!65!black,fill=blue!45] table[
@@ -253,7 +252,7 @@ Màn & Biến C/P & Mệnh đề & Lượt SAT & Chọn & Lan truyền & Quay lu
 \end{figure}
 
 \subsection{Nhận xét}
-Trên cả ba màn $3\times3$, lan truyền đơn vị và kiểm tra mâu thuẫn đủ để trả lời mọi truy vấn SAT. Ba màn $4\times4$ đều cần 14 bước và 448 lượt gọi SAT. Riêng màn \texttt{4x4-02} có KB đạt 471 mệnh đề và ghi nhận 26\,256 lần lan truyền, cao nhất nhóm. Thời gian đo được cũng dài nhất nhóm.
+Trên cả ba màn $3\times3$, lan truyền đơn vị và kiểm tra mâu thuẫn đủ để trả lời mọi truy vấn SAT. Cả bốn màn $4\times4$ đều cần 14 bước và 448 lượt gọi SAT. Màn mới \texttt{4x4-04} mở sẵn hai ô C1 và C2, có cả manh mối \texttt{INTERSECTION} và \texttt{PARITY}. Bộ giải mở 14 ô còn lại trong 32.62 ms, nhanh nhất nhóm. Riêng màn \texttt{4x4-02} có KB đạt 471 mệnh đề và ghi nhận 26\,256 lần lan truyền, cao nhất nhóm. Thời gian đo được cũng dài nhất nhóm.
 
 Trên bàn $5\times5$, màn \texttt{5x5-02} chỉ cần 20 bước nhưng mất nhiều thời gian nhất trong bộ thử. Màn này có 1\,246 mệnh đề ở bước lớn nhất và 145\,006 lần lan truyền. Màn \texttt{5x5-03} có nhiều lần quay lui nhất (580). Chỉ đếm số thẻ mở không phản ánh được chi phí của từng truy vấn SAT. Thời gian trong bảng là một lần đo trên một máy; mức dao động giữa các lần chạy chưa được khảo sát.
 
