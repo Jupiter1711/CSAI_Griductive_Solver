@@ -65,6 +65,20 @@ class GridRegionResolver(RegionResolver):
         raise ValueError(f"unknown region type: {type(region).__name__}")
 
 
+def intersect_regions(
+    regions: tuple[Region, ...],
+    board: Board,
+    resolver: RegionResolver | None = None,
+) -> tuple[Cell, ...]:
+    if not isinstance(regions, tuple) or len(regions) < 2:
+        raise ValueError("an intersection needs a tuple of at least two regions")
+    resolver = resolver or GridRegionResolver()
+    shared = set(resolver.resolve(regions[0], board))
+    for region in regions[1:]:
+        shared &= set(resolver.resolve(region, board))
+    return tuple(sorted(shared))
+
+
 def column_label(col: int) -> str:
     """0 -> "A", 25 -> "Z", 26 -> "AA", bijective base 26."""
     if not _is_int(col) or col < 0:

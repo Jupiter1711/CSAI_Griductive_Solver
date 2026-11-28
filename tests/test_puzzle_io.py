@@ -14,7 +14,10 @@ from griductive.models import (
     CountKind,
     ExplicitRegion,
     FactClue,
+    IntersectionClue,
     NeighborRegion,
+    ParityClue,
+    ParityKind,
     RowRegion,
     Status,
 )
@@ -132,6 +135,77 @@ def test_row_and_column_regions_are_one_based_in_json(tmp_path, region, expected
 
     puzzle = JsonPuzzleLoader().load(write(tmp_path, changed(edit)))
     assert puzzle.clues[3].region == expected
+
+
+def test_loads_extension_clues(tmp_path):
+    def edit(d):
+        d["clues"][2] = {
+            "id": "c3",
+            "owner": "A2",
+            "type": "PARITY",
+            "parity": "ODD",
+            "region": {"type": "COLUMN", "column": "B"},
+        }
+        d["clues"][3] = {
+            "id": "c4",
+            "owner": "B2",
+            "type": "INTERSECTION",
+            "k": 0,
+            "regions": [{"type": "ROW", "row": 2}, {"type": "NEIGHBORS", "cell": "B2"}],
+        }
+
+    puzzle = JsonPuzzleLoader().load(write(tmp_path, changed(edit)))
+    assert puzzle.clues[2:] == (
+        ParityClue("c3", Cell(1, 0), ParityKind.ODD, ColumnRegion(1)),
+        IntersectionClue(
+            "c4", Cell(1, 1), 0, (RowRegion(1), NeighborRegion(Cell(1, 1)))
+        ),
+    )
+
+
+PARITY = {
+    "id": "c3",
+    "owner": "A2",
+    "type": "PARITY",
+    "parity": "EVEN",
+    "region": {"type": "ROW", "row": 1},
+}
+INTERSECTION = {
+    "id": "c4",
+    "owner": "B2",
+    "type": "INTERSECTION",
+    "k": 1,
+    "regions": [{"type": "ROW", "row": 1}, {"type": "COLUMN", "column": "A"}],
+}
+
+
+def _with(clue: dict, **change):
+    def edit(d):
+        index = 2 if clue["type"] == "PARITY" else 3
+        d["clues"][index] = {**clue, **change}
+
+    return edit
+
+
+@pytest.mark.parametrize(
+    "edit,where",
+    [
+        (_with(PARITY, parity="SOMETIMES"), "clues[2].parity"),
+        (_with(PARITY, k=1), "unknown key"),
+        (_with(PARITY, region={"type": "ROW", "row": 9}), "clues[2].region.row"),
+        (_with(INTERSECTION, k=2), "must be in [0, 1]"),
+        (_with(INTERSECTION, regions=[{"type": "ROW", "row": 1}]), "at least two"),
+        (_with(INTERSECTION, regions={"type": "ROW"}), "clues[3].regions"),
+        (
+            _with(INTERSECTION, regions=[{"type": "ROW", "row": 1}, {"type": "X"}]),
+            "clues[3].regions[1].type",
+        ),
+    ],
+)
+def test_rejects_invalid_extension_clues(tmp_path, edit, where):
+    with pytest.raises(ValueError) as error:
+        JsonPuzzleLoader().load(write(tmp_path, changed(edit)))
+    assert where in str(error.value)
 
 
 def _set(path: list, value):

@@ -167,11 +167,21 @@ def test_cell_label_uses_column_letter_then_row():
         ),
         (
             IntersectionClue("i", Cell(0, 0), 1, (RowRegion(0), ColumnRegion(1))),
-            "Exactly 1 criminal is in row 1 and in column B.",
+            "Exactly 1 person who is both in row 1 and in column B is a criminal.",
         ),
         (
             IntersectionClue("i", Cell(0, 0), 0, (RowRegion(2), ColumnRegion(0))),
-            "No criminal is in row 3 and in column A.",
+            "No one who is both in row 3 and in column A is a criminal.",
+        ),
+        (
+            IntersectionClue(
+                "i",
+                Cell(0, 0),
+                2,
+                (RowRegion(0), ColumnRegion(1), NeighborRegion(Cell(1, 1))),
+            ),
+            "Exactly 2 people who are in row 1, in column B and among Krillin's "
+            "neighbors are criminals.",
         ),
     ],
 )

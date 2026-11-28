@@ -18,7 +18,10 @@ from griductive.models import (
     CountKind,
     ExplicitRegion,
     FactClue,
+    IntersectionClue,
     NeighborRegion,
+    ParityClue,
+    ParityKind,
     Puzzle,
     Region,
     RowRegion,
@@ -29,6 +32,7 @@ from griductive.regions import (
     GridRegionResolver,
     column_index,
     format_cell,
+    intersect_regions,
     parse_cell,
 )
 
@@ -54,6 +58,8 @@ _CLUE_KEYS = {
     "EXACTLY": {"k", "region"},
     "AT_LEAST": {"k", "region"},
     "AT_MOST": {"k", "region"},
+    "PARITY": {"parity", "region"},
+    "INTERSECTION": {"k", "regions"},
 }
 _REGION_KEYS = {
     "ROW": {"row"},
@@ -148,12 +154,32 @@ def _clue(item: Any, board: Board, where: str) -> Clue:
         right = _cell(item["right"], board.size, f"{where}.right")
         return BinaryClue(clue_id, owner, BinaryKind(kind), left, right)
 
+    if kind == "PARITY":
+        region = _region(item["region"], board.size, f"{where}.region")
+        parity = _enum(item["parity"], ParityKind.__members__, f"{where}.parity")
+        return ParityClue(clue_id, owner, ParityKind(parity), region)
+
+    if kind == "INTERSECTION":
+        _list(item["regions"], f"{where}.regions")
+        if len(item["regions"]) < 2:
+            raise ValueError(f"{where}.regions: expected at least two regions")
+        regions = tuple(
+            _region(region, board.size, f"{where}.regions[{i}]")
+            for i, region in enumerate(item["regions"])
+        )
+        k = _integer(item["k"], f"{where}.k")
+        _check_k(k, len(intersect_regions(regions, board)), where)
+        return IntersectionClue(clue_id, owner, k, regions)
+
     region = _region(item["region"], board.size, f"{where}.region")
     k = _integer(item["k"], f"{where}.k")
-    region_size = len(GridRegionResolver().resolve(region, board))
+    _check_k(k, len(GridRegionResolver().resolve(region, board)), where)
+    return CountClue(clue_id, owner, CountKind(kind), k, region)
+
+
+def _check_k(k: int, region_size: int, where: str) -> None:
     if not 0 <= k <= region_size:
         raise ValueError(f"{where}.k: must be in [0, {region_size}], got {k}")
-    return CountClue(clue_id, owner, CountKind(kind), k, region)
 
 
 def _region(item: Any, size: int, where: str) -> Region:

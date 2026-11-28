@@ -101,11 +101,16 @@ def describe_clue(clue: Clue, board: Board) -> str:
         return f"There is an {parity} number of criminals {where}."
 
     if isinstance(clue, IntersectionClue):
+        # "who is both in X and in Y" reads as one person in every region
+        # (intersection); "in X and in Y" alone is easily read as a union.
         where = join_words([describe_region(r, board) for r in clue.regions])
+        if len(clue.regions) == 2:
+            where = f"both {where}"
         if clue.k == 0:
-            return f"No criminal is {where}."
-        verb = "is" if clue.k == 1 else "are"
-        return f"Exactly {clue.k} {_criminals(clue.k)} {verb} {where}."
+            return f"No one who is {where} is a criminal."
+        if clue.k == 1:
+            return f"Exactly 1 person who is {where} is a criminal."
+        return f"Exactly {clue.k} people who are {where} are criminals."
 
     return f"{type(clue).__name__} clue {getattr(clue, 'id', '')}".strip()
 
