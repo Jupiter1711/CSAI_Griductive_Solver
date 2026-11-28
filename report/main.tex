@@ -1,164 +1,239 @@
-\documentclass[12pt,a4paper]{article}
-\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
-\usepackage[T5]{fontenc}
-\usepackage[utf8]{inputenc}
-\usepackage[english,vietnamese]{babel}
-\usepackage{amsmath,amssymb}
-\usepackage{graphicx}
-\usepackage{pgfplots}
-\pgfplotsset{compat=1.18}
-\usepackage{booktabs}
-\usepackage{array}
-\usepackage{float}
-\usepackage{listings}
-\usepackage{hyperref}
-
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    filecolor=magenta,
-    urlcolor=cyan,
-    hypertexnames=false,
+    \documentclass[12pt,a4paper]{article}
+    \usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+    \usepackage[T5]{fontenc}
+    \usepackage[utf8]{inputenc}
+    \usepackage[english,vietnamese]{babel}
+    \usepackage{amsmath,amssymb}
+    \usepackage{graphicx}
+    \usepackage{pgfplots}
+    \pgfplotsset{compat=1.18}
+    \usepackage{booktabs}
+    \usepackage{array}
+    \usepackage{float}
+    \usepackage{listings}
+    \usepackage{hyperref}
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric,fit,babel}
+\tikzset{
+    box/.style={draw, rounded corners=2pt, align=center, font=\small, inner sep=4pt, minimum height=8mm},
+    decision/.style={draw, diamond, aspect=2.2, align=center, font=\small, inner sep=2pt},
+    terminal/.style={draw, rounded corners=6pt, align=center, font=\small\bfseries, inner sep=4pt, minimum height=7mm},
+    arr/.style={-{Stealth[length=2mm]}, thick},
+    lbl/.style={font=\footnotesize, inner sep=3pt},
 }
 
-\setlength{\emergencystretch}{2em}
+    \hypersetup{
+        colorlinks=true,
+        linkcolor=blue,
+        filecolor=magenta,
+        urlcolor=cyan,
+        hypertexnames=false,
+    }
 
-\title{Báo cáo Đồ án 1: Bloxorz Solver}
+    \setlength{\emergencystretch}{2em}
 
-\begin{document}
+    \title{Báo cáo Đồ án 2: Griductive Solver}
 
-\begin{titlepage}
+    \begin{document}
 
-\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+    \begin{titlepage}
 
-\centering
-\vspace*{0.5cm}
+    \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 
-\textsc{\LARGE Trường Đại học Khoa học Tự nhiên}\\[0.35cm]
-\textsc{\Large Ngành Trí tuệ Nhân tạo}\\[0.35cm]
-\textsc{\large Môn học: Cơ sở Trí tuệ Nhân tạo}\\[1.5cm]
+    \centering
+    \vspace*{0.5cm}
 
-\includegraphics[width=0.30\textwidth]{image/logo-khtn.png}\\[1.5cm]
+    \textsc{\LARGE Trường Đại học Khoa học Tự nhiên}\\[0.35cm]
+    \textsc{\Large Ngành Trí tuệ Nhân tạo}\\[0.35cm]
+    \textsc{\large Môn học: Cơ sở Trí tuệ Nhân tạo}\\[1.5cm]
 
-\HRule \\[0.4cm]
-{\huge \bfseries Báo cáo Đồ án 2}\\[0.3cm]
-{\Large \bfseries Griductive Solver}\\[0.4cm]
-\HRule \\[2.0cm]
+    \includegraphics[width=0.30\textwidth]{image/logo-khtn.png}\\[1.5cm]
 
-{\renewcommand{\arraystretch}{1.25}%
-\noindent
-\begin{minipage}[t]{0.56\textwidth}
-\begin{flushleft}
-{\large \emph{Sinh viên thực hiện:}}\\[0.25cm]
-\normalsize
-\begin{tabular}[t]{@{}l@{\hspace{0.5em}--\hspace{0.5em}}l@{}}
-Nguyễn Huỳnh Hải Long & 25122002 \\
-Ngô Quang Minh        & 25122011 \\
-Võ Tấn Lợi            & 25122028 \\
-Hồ Trần Quốc Thắng    & 25122041 \\
-Nguyễn Lê Khánh Toàn  & 25122045
-\end{tabular}
-\end{flushleft}
-\end{minipage}\hfill
-\begin{minipage}[t]{0.42\textwidth}
-\begin{flushright}
-{\large \emph{Giáo viên hướng dẫn:}}\\[0.25cm]
-\normalsize
-\begin{tabular}[t]{@{}r@{}}
-NGND, GS. TS. Lê Hoài Bắc \\
-ThS. Nguyễn Ngọc Đức
-\end{tabular}
-\end{flushright}
-\end{minipage}}
+    \HRule \\[0.4cm]
+    {\huge \bfseries Báo cáo Đồ án 2}\\[0.3cm]
+    {\Large \bfseries Griductive Solver}\\[0.4cm]
+    \HRule \\[2.0cm]
 
-\vfill
+    {\renewcommand{\arraystretch}{1.25}%
+    \noindent
+    \begin{minipage}[t]{0.56\textwidth}
+    \begin{flushleft}
+    {\large \emph{Sinh viên thực hiện:}}\\[0.25cm]
+    \normalsize
+    \begin{tabular}[t]{@{}l@{\hspace{0.5em}--\hspace{0.5em}}l@{}}
+    Nguyễn Huỳnh Hải Long & 25122002 \\
+    Ngô Quang Minh        & 25122011 \\
+    Võ Tấn Lợi            & 25122028 \\
+    Hồ Trần Quốc Thắng    & 25122041 \\
+    Nguyễn Lê Khánh Toàn  & 25122045
+    \end{tabular}
+    \end{flushleft}
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.42\textwidth}
+    \begin{flushright}
+    {\large \emph{Giáo viên hướng dẫn:}}\\[0.25cm]
+    \normalsize
+    \begin{tabular}[t]{@{}r@{}}
+    NGND, GS. TS. Lê Hoài Bắc \\
+    ThS. Nguyễn Ngọc Đức
+    \end{tabular}
+    \end{flushright}
+    \end{minipage}}
 
-\end{titlepage}
+    \vfill
 
-\tableofcontents
-\newpage
+    \end{titlepage}
 
-% ==================== PHẦN 1 ====================
-\section{Giới thiệu và Tổng quan bài toán}
+    \tableofcontents
+    \newpage
 
-\subsection{Giới thiệu trò chơi Griductive}
-Griductive \cite{griductive_game} là trò chơi giải đố suy luận trên lưới ô vuông kích thước $N \times N$ ($N \in \{3, 4, 5\}$), trong đó mỗi ô chứa một nhân vật mang trạng thái ẩn là \emph{Criminal} (tội phạm) hoặc \emph{Innocent} (người vô tội). Mục tiêu của người chơi là dựa vào các manh mối trên những thẻ đã lật ngửa để lần lượt xác định danh tính của toàn bộ nhân vật còn lại. Điểm khó của trò chơi nằm ở quy tắc \emph{không đoán mò}: mỗi phán quyết chỉ được chấp nhận khi trạng thái đó là hệ quả logic tất yếu từ các dữ kiện hiện có; nếu phán quyết mang tính phỏng đoán hoặc mâu thuẫn, thẻ sẽ không được lật.
+    % ==================== PHẦN 1 ====================
+    \section{Giới thiệu và Tổng quan bài toán}
 
-Bài toán phù hợp để áp dụng các phương pháp suy diễn tự động dựa trên logic mệnh đề, mã hóa dạng chuẩn hội (CNF) và bộ giải thỏa mãn Boolean (DPLL SAT solver). Đặc biệt, vì mọi manh mối đã lật đều luôn đúng và bộ giải chỉ được tiếp cận trạng thái công khai theo từng bước, đây là môi trường tiêu biểu để thiết kế và đánh giá tác tử suy luận logic chặt chẽ \cite{russell2020aima}.
+    \subsection{Giới thiệu trò chơi Griductive}
+    Griductive \cite{griductive_game} là trò chơi giải đố suy luận trên lưới ô vuông kích thước $N \times N$ ($N \in \{3, 4, 5\}$), trong đó mỗi ô chứa một nhân vật mang trạng thái ẩn là \emph{Criminal} (tội phạm) hoặc \emph{Innocent} (người vô tội). Mục tiêu của người chơi là dựa vào các manh mối trên những thẻ đã lật ngửa để lần lượt xác định danh tính của toàn bộ nhân vật còn lại. Điểm khó của trò chơi là người chơi \emph{không được đoán}: mỗi phán quyết chỉ được chấp nhận khi trạng thái đó là hệ quả logic tất yếu từ các dữ kiện hiện có; nếu phán quyết mang tính phỏng đoán hoặc mâu thuẫn, thẻ sẽ không được lật.
 
-\subsection{Luật chơi và Các thành phần trong màn chơi}
-\subsubsection{Cấu trúc bàn chơi và Manh mối}
-\begin{itemize}
-    \item \textbf{Cấu trúc lưới và Nhân vật:} Bàn chơi gồm $N$ hàng đánh số từ trên xuống ($1 \dots N$) và $N$ cột đánh chữ cái từ trái sang phải ($A, B, \dots$; ví dụ \texttt{C2}). Mỗi ô chứa một nhân vật với tên (xếp theo bảng chữ cái) và nghề nghiệp; các thông tin này không mang ý nghĩa logic trừ khi manh mối nhắc trực tiếp đến.
+    Bài toán phù hợp để áp dụng các phương pháp suy diễn tự động dựa trên logic mệnh đề, mã hóa dạng chuẩn hội (CNF) và bộ giải thỏa mãn Boolean (DPLL SAT solver). Đặc biệt, vì mọi manh mối đã lật đều luôn đúng và bộ giải chỉ được tiếp cận trạng thái công khai theo từng bước, đây là môi trường tiêu biểu để thiết kế và đánh giá tác tử suy luận logic chặt chẽ \cite{russell2020aima}.
 
-    \item \textbf{Trạng thái thẻ bài và Manh mối:} Ban đầu một số thẻ được lật ngửa để cung cấp dữ kiện khởi đầu, các thẻ còn lại úp mặt. Mọi manh mối đã lật đều đúng bất kể chủ nhân thẻ là \emph{Criminal} hay \emph{Innocent}, và được biểu diễn theo các mẫu có cấu trúc chuẩn.
-
-    \item \textbf{Cơ chế suy diễn và Điều kiện thắng:} Ở mỗi lượt, người chơi chọn một nhân vật chưa xác định và gửi phán quyết \texttt{CRIMINAL} hoặc \texttt{INNOCENT}. Nếu phán quyết đúng và chứng minh được, thẻ sẽ lật ngửa để tiết lộ manh mối mới; người chơi thắng khi mở chính xác toàn bộ $N \times N$ ô trên lưới.
-\end{itemize}
-
-\subsubsection{Các vùng manh mối và Cơ chế phản hồi}
-\begin{itemize}
-    \item \textbf{Quy tắc không đoán mò (No-guess rule):} Mỗi màn chơi hợp lệ có duy nhất một phép gán hoàn chỉnh thỏa mãn toàn bộ manh mối, và người chơi chỉ được phép mở thẻ khi trạng thái nhân vật bị ép buộc logic bởi tập manh mối hiện tại.
-
-    \item \textbf{Các vùng manh mối (Clue regions):} Một manh mối có thể tham chiếu đến một trong các vùng trên lưới ô vuông:
+    \subsection{Luật chơi và Các thành phần trong màn chơi}
+    \subsubsection{Cấu trúc bàn chơi và Manh mối}
     \begin{itemize}
-        \item \emph{Hàng và Cột (Row \& Column):} Tập hợp tất cả các ô có cùng chỉ số hàng hoặc cùng chữ cái cột.
-        \item \emph{Lân cận 8 hướng (Neighbors):} Các ô tiếp xúc ngang, dọc hoặc chéo với một ô cho trước (tối đa 8 ô, không tính chính ô đó).
-        \item \emph{Danh sách ô chỉ định (Explicit list):} Tập hợp tường minh các tọa độ ô phân biệt được liệt kê trong manh mối.
+        \item \textbf{Cấu trúc lưới và Nhân vật:} Bàn chơi gồm $N$ hàng đánh số từ trên xuống ($1 \dots N$) và $N$ cột đánh chữ cái từ trái sang phải ($A, B, \dots$; ví dụ \texttt{C2}). Mỗi ô chứa một nhân vật với tên (xếp theo bảng chữ cái) và nghề nghiệp; các thông tin này không mang ý nghĩa logic trừ khi manh mối nhắc trực tiếp đến.
+
+        \item \textbf{Trạng thái thẻ bài và Manh mối:} Ban đầu một số thẻ được lật ngửa để cung cấp dữ kiện khởi đầu, các thẻ còn lại úp mặt. Mọi manh mối đã lật đều đúng bất kể chủ nhân thẻ là \emph{Criminal} hay \emph{Innocent}, và được biểu diễn theo các mẫu có cấu trúc chuẩn.
+
+        \item \textbf{Cơ chế suy diễn và Điều kiện thắng:} Ở mỗi lượt, người chơi chọn một nhân vật chưa xác định và gửi phán quyết \texttt{CRIMINAL} hoặc \texttt{INNOCENT}. Nếu phán quyết đúng và chứng minh được, thẻ sẽ lật ngửa để tiết lộ manh mối mới; người chơi thắng khi mở chính xác toàn bộ $N \times N$ ô trên lưới.
     \end{itemize}
 
-    \item \textbf{Cơ chế phản hồi phán quyết:} Khi người chơi đưa ra phán quyết chưa hợp lệ, hệ thống giữ nguyên bàn chơi mà không lật thẻ ẩn, đồng thời phân biệt rõ giữa \texttt{NOT\_PROVABLE} (chưa đủ dữ kiện để chứng minh cả hai chiều) và \texttt{CONTRADICTED} (mâu thuẫn với các manh mối đã biết).
-\end{itemize}
-% ==================== PHẦN 2 ====================
-\section{Kế hoạch thực hiện và Phân công công việc}
+    \subsubsection{Các vùng manh mối và Cơ chế phản hồi}
+    \begin{itemize}
+        \item \textbf{Chỉ kết luận khi chứng minh được (No-guess rule):} Mỗi màn chơi hợp lệ có duy nhất một phép gán hoàn chỉnh thỏa mãn toàn bộ manh mối, và người chơi chỉ được phép mở thẻ khi trạng thái nhân vật bị ép buộc logic bởi tập manh mối hiện tại.
 
+        \item \textbf{Các vùng manh mối (Clue regions):} Một manh mối có thể tham chiếu đến một trong các vùng trên lưới ô vuông:
+        \begin{itemize}
+            \item \emph{Hàng và Cột (Row \& Column):} Tập hợp tất cả các ô có cùng chỉ số hàng hoặc cùng chữ cái cột.
+            \item \emph{Lân cận 8 hướng (Neighbors):} Các ô tiếp xúc ngang, dọc hoặc chéo với một ô cho trước (tối đa 8 ô, không tính chính ô đó).
+            \item \emph{Danh sách ô chỉ định (Explicit list):} Tập hợp tường minh các tọa độ ô phân biệt được liệt kê trong manh mối.
+        \end{itemize}
+
+        \item \textbf{Cơ chế phản hồi phán quyết:} Khi người chơi đưa ra phán quyết chưa hợp lệ, hệ thống giữ nguyên bàn chơi mà không lật thẻ ẩn, đồng thời phân biệt rõ giữa \texttt{NOT\_PROVABLE} (chưa đủ dữ kiện để chứng minh cả hai chiều) và \texttt{CONTRADICTED} (mâu thuẫn với các manh mối đã biết).
+    \end{itemize}
+    % ==================== PHẦN 2 ====================
+    \section{Phân công công việc}
 
 \begin{table}[H]
 \centering
 \renewcommand{\arraystretch}{1.3}
-\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}clp{0.42\textwidth}c@{}}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}clp{0.47\textwidth}c@{}}
 \toprule
 \textbf{STT} & \textbf{Họ và tên} & \textbf{Công việc phụ trách} & \textbf{Hoàn thành} \\
 \midrule
-1 & Nguyễn Huỳnh Hải Long & \textit{[Điền công việc phụ trách]} & \textit{[...\%]} \\
-2 & Ngô Quang Minh        & Hiện thực Game Engine và bộ đánh giá ngữ nghĩa trực tiếp, viết kiểm thử và đối chiếu với bộ mã hóa CNF. & \textit{[100\%]} \\
-3 & Võ Tấn Lợi            & \textit{[Điền công việc phụ trách]} & \textit{[...\%]} \\
-4 & Hồ Trần Quốc Thắng    & \textit{[Điền công việc phụ trách]} & \textit{[...\%]} \\
-5 & Nguyễn Lê Khánh Toàn  & \textit{[Điền công việc phụ trách]} & \textit{[...\%]} \\
+1 & Nguyễn Huỳnh Hải Long & Xây dựng bộ mã hóa CNF (\texttt{encoder.py}): ánh xạ biến tất định, mã hóa sáu mẫu manh mối cốt lõi và hai manh mối mở rộng \texttt{PARITY}, \texttt{INTERSECTION}; phối hợp chốt các kiểu dữ liệu chung; viết kiểm thử cho bộ mã hóa. & 100\% \\
+2 & Ngô Quang Minh        & Xây dựng Game Engine và bộ đánh giá ngữ nghĩa trực tiếp, viết kiểm thử đối chiếu với bộ mã hóa CNF; xây dựng bộ chạy thực nghiệm và xuất CSV; viết phần Thực nghiệm; quay video demo. & 100\% \\
+3 & Võ Tấn Lợi            & Xây dựng vòng lặp suy diễn (\texttt{agent/runner.py}) và vết suy diễn (\texttt{agent/trace.py}); cùng hoàn thiện lớp tác tử; tạo bộ dữ liệu màn chơi ban đầu. & 100\% \\
+4 & Hồ Trần Quốc Thắng    & Thiết lập CI; thiết kế kiểu dữ liệu chung, hệ tọa độ và vùng manh mối; cài đặt bộ giải DPLL, bộ nạp JSON và bộ kiểm định tính duy nhất; thiết kế lại bộ màn chơi \texttt{puzzles/}; xây dựng giao diện Pygame và \texttt{main.py}. & 100\% \\
+5 & Nguyễn Lê Khánh Toàn  & Xây dựng tác tử suy luận (\texttt{agent/inference.py}): dựng $KB_t$ từ trạng thái công khai và phân loại hệ quả logic; dựng khung báo cáo. & 100\% \\
 \bottomrule
 \end{tabular*}
-\caption{Bảng phân công công việc và đánh giá mức độ hoàn thành của các thành viên.}
+\caption{Bảng phân công công việc và mức độ hoàn thành của các thành viên.}
 \label{tab:task_distribution}
 \end{table}
 
-% ==================== PHẦN 3 ====================
-\section{Thiết kế hệ thống và Hiện thực trò chơi}
+    % ==================== PHẦN 3 ====================
+    \section{Thiết kế hệ thống}
 
-\subsection{Kiến trúc mã nguồn và Tách biệt vai trò (Role Separation)}
-Mã nguồn nằm trong gói \texttt{griductive/}. Các màn chơi trong \texttt{puzzles/} dùng JSON để lưu kích thước lưới, nhân vật, manh mối, đáp án và danh sách ô mở ban đầu. \texttt{GridGameEngine} giữ toàn bộ màn chơi, gọi bộ kiểm định trước khi nạp và chỉ cập nhật trạng thái sau khi màn chơi qua kiểm định.
+    \subsection{Kiến trúc mã nguồn}
+Mã nguồn nằm trong gói \texttt{griductive/} và tách hai vai trò theo yêu cầu của đề (Hình~\ref{fig:architecture}). \texttt{GridGameEngine} giữ toàn bộ màn chơi, gồm đáp án và manh mối của các thẻ úp, và chỉ nhận màn đã qua bộ kiểm định. Tác tử chỉ nhận \texttt{PublicState}, gồm bàn chơi, các phán quyết đã xác nhận và manh mối của thẻ đang mở, rồi dựng $KB_t$ từ đó.
 
-Ở lượt $t$, \texttt{PublicState} chỉ chứa thông tin bàn chơi, phán quyết đã xác nhận và manh mối của các thẻ đang mở. Tác tử nhận trạng thái này để xây dựng $KB_t$. Các phán quyết và manh mối của thẻ úp được giữ trong trạng thái riêng của engine.
+Khi nhận một phán quyết, engine phân loại ô được chọn trên chính $KB_t$ công khai. Engine trả về \texttt{NOT\_PROVABLE} nếu cả hai trạng thái còn khả dĩ, và \texttt{CONTRADICTED} nếu trạng thái ngược lại là hệ quả logic. Nếu phán quyết là hệ quả logic, engine đối chiếu với đáp án rồi công bố trạng thái và manh mối của ô trong cùng một lần cập nhật. Phán quyết bị từ chối không làm thay đổi bàn chơi; \texttt{Restart} phục hồi các ô mở ban đầu.
 
-Khi nhận phán quyết, engine kiểm tra tính nhất quán của $KB_t$ và dùng bộ suy diễn để phân loại ô được chọn. Nếu cả hai trạng thái còn khả dĩ, engine trả về \texttt{NOT\_PROVABLE}. Nếu trạng thái đối lập là hệ quả logic, engine trả về \texttt{CONTRADICTED}. Nếu phán quyết là hệ quả logic, engine đối chiếu với đáp án đã lưu rồi công bố phán quyết và manh mối của ô trong cùng một lần cập nhật. Bàn chơi giữ nguyên khi phán quyết bị từ chối. Chức năng chơi lại phục hồi các ô mở ban đầu.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\node[box] (ui) at (0,0) {GUI / Runner};
+\node[box] (eng) at (8.6,0) {\textbf{Game Engine}\\ \footnotesize giữ đáp án và manh mối thẻ úp};
+\node[box] (agent) at (0,-4.4) {\textbf{Logic Agent}};
+\node[box] (enc) at (4.3,-4.4) {CNF Encoder};
+\node[box] (sat) at (8.6,-4.4) {DPLL Solver};
+\coordinate (lowest) at (0,-6.1);
+\draw[arr] ([yshift=2.5mm]ui.east) -- node[lbl, above] {phán quyết (ô, trạng thái)} ([yshift=2.5mm]eng.west);
+\draw[arr] ([yshift=-2.5mm]eng.west) -- node[lbl, below] {kết quả + manh mối mới} ([yshift=-2.5mm]ui.east);
+\draw[arr] (ui) -- node[lbl, left, align=right] {\texttt{PublicState}\\(Hint, Auto solve)} (agent);
+\draw[arr] (eng.south) -- ++(0,-1.4) -| node[lbl, above, pos=0.25] {\texttt{PublicState} (chấm phán quyết)} ([xshift=7mm]agent.north);
+\draw[arr] (agent) -- node[lbl, above, align=center] {manh mối,\\phán quyết} (enc);
+\draw[arr] (enc) -- node[lbl, above] {$KB_t$} (sat);
+\draw[arr] (sat.south) -- ++(0,-0.8) -| node[lbl, below, pos=0.25] {SAT / UNSAT cho từng giả thiết} (agent.south);
+\node[draw, dashed, rounded corners, inner sep=5mm, fit=(agent)(enc)(sat)(lowest)] (pub) {};
+\node[lbl, anchor=south east] at (pub.north east) {chỉ dùng thông tin công khai};
+\end{tikzpicture}
+\caption{Tách vai trò: chỉ Game Engine giữ dữ liệu bí mật; tác tử, bộ mã hóa và bộ giải SAT chỉ làm việc trên \texttt{PublicState}.}
+\label{fig:architecture}
+\end{figure}
+
+    \subsection{Định dạng và bộ màn chơi}
+Mỗi màn là một file JSON gồm sáu khóa: \texttt{id}, \texttt{size}, \texttt{characters}, \texttt{clues}, \texttt{solution} và \texttt{initially\_revealed}. Tọa độ được ghi dạng \texttt{A1}, \texttt{C2} và được đổi sang \texttt{Cell(row, col)} đánh số từ $0$, sắp theo thứ tự row-major. Bảng~\ref{tab:json_schema} liệt kê các trường của từng loại manh mối và vùng. \texttt{JsonPuzzleLoader} kiểm tra chặt cấu trúc và báo lỗi kèm vị trí (ví dụ \texttt{clues[2].k: must be in [0, 3], got 4}), không tự sửa dữ liệu. Bộ nạp từ chối các file có khóa thiếu hoặc lạ, tọa độ ngoài bàn, tên nhân vật không theo thứ tự chữ cái, \texttt{id} trùng, hoặc $k$ nằm ngoài $[0, |R|]$. Các kiểm tra ngữ nghĩa (đáp án thỏa mọi manh mối, nghiệm duy nhất) do bộ kiểm định ở Mục~\ref{sec:uniqueness} đảm nhận.
+
+\begin{table}[H]
+\centering\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Loại manh mối} & \textbf{Trường riêng (ngoài \texttt{id}, \texttt{owner}, \texttt{type})} \\
+\midrule
+\texttt{FACT} & \texttt{target}, \texttt{status} \\
+\texttt{SAME}, \texttt{DIFFERENT} & \texttt{left}, \texttt{right} \\
+\texttt{EXACTLY}, \texttt{AT\_LEAST}, \texttt{AT\_MOST} & \texttt{k}, \texttt{region} \\
+\texttt{PARITY} & \texttt{parity} (\texttt{EVEN}/\texttt{ODD}), \texttt{region} \\
+\texttt{INTERSECTION} & \texttt{k}, \texttt{regions} (mảng từ hai vùng trở lên) \\
+\midrule
+\multicolumn{2}{@{}l@{}}{Vùng: \texttt{\{"type":"ROW","row":2\}}, \texttt{\{"type":"COLUMN","column":"C"\}},} \\
+\multicolumn{2}{@{}l@{}}{\phantom{Vùng: }\texttt{\{"type":"NEIGHBORS","cell":"B2"\}}, \texttt{\{"type":"EXPLICIT","cells":["A1","C2"]\}}} \\
+\bottomrule
+\end{tabular}
+\caption{Lược đồ JSON của manh mối và vùng.}
+\label{tab:json_schema}
+\end{table}
+
+Thư mục \texttt{puzzles/} gồm mười màn theo chủ đề Dragon Ball: ba màn cho mỗi kích thước $3\times3$, $4\times4$, $5\times5$, và màn \texttt{4x4-04} dành cho hai manh mối mở rộng. Mọi màn đều đọc được, có đáp án thỏa mọi manh mối, có nghiệm duy nhất và được tác tử giải trọn mà không phải đoán. Ở màn \texttt{4x4-04}, nếu loại riêng các manh mối \texttt{PARITY}, hoặc riêng các manh mối \texttt{INTERSECTION}, khỏi $KB_t$ thì tác tử đều bế tắc; như vậy cả hai loại manh mối mở rộng đều cần thiết để giải màn này.
 
 \subsection{Bộ đánh giá ngữ nghĩa trực tiếp (Direct Semantic Evaluator)}
-\texttt{DirectClueEvaluator} nhận một manh mối, thông tin bàn chơi và một phép gán trạng thái đầy đủ. Hàm kiểm tra kích thước, tọa độ, kiểu trạng thái và tham số liên quan, sau đó đánh giá trực tiếp bằng phép so sánh hoặc đếm. Đầu vào không hợp lệ gây lỗi \texttt{ValueError}. Kết quả Boolean cho biết phép gán có thỏa mãn manh mối hay không.
+    \texttt{DirectClueEvaluator} nhận một manh mối, thông tin bàn chơi và một phép gán trạng thái đầy đủ. Hàm kiểm tra kích thước, tọa độ, kiểu trạng thái và tham số liên quan, sau đó đánh giá trực tiếp bằng phép so sánh hoặc đếm. Đầu vào không hợp lệ gây lỗi \texttt{ValueError}. Kết quả Boolean cho biết phép gán có thỏa mãn manh mối hay không.
 
-\begin{itemize}
-    \item \texttt{FACT} so sánh trạng thái tại ô đích với trạng thái yêu cầu. \texttt{SAME} và \texttt{DIFFERENT} kiểm tra hai ô có cùng hay khác trạng thái.
-    \item \texttt{EXACTLY}, \texttt{AT\_LEAST} và \texttt{AT\_MOST} đếm số ô \emph{Criminal} trong vùng rồi so sánh kết quả với ngưỡng $k$ theo thứ tự $=k$, $\ge k$ và $\le k$.
-    \item Manh mối chẵn lẻ kiểm tra số ô \emph{Criminal} theo modulo $2$. Manh mối giao vùng lấy giao của các vùng trước khi kiểm tra số ô \emph{Criminal} có đúng bằng $k$ hay không.
-\end{itemize}
+    \begin{itemize}
+        \item \texttt{FACT} so sánh trạng thái tại ô đích với trạng thái yêu cầu. \texttt{SAME} và \texttt{DIFFERENT} kiểm tra hai ô có cùng hay khác trạng thái.
+        \item \texttt{EXACTLY}, \texttt{AT\_LEAST} và \texttt{AT\_MOST} đếm số ô \emph{Criminal} trong vùng rồi so sánh kết quả với ngưỡng $k$ theo thứ tự $=k$, $\ge k$ và $\le k$.
+        \item Manh mối chẵn lẻ kiểm tra số ô \emph{Criminal} theo modulo $2$. Manh mối giao vùng lấy giao của các vùng trước khi kiểm tra số ô \emph{Criminal} có đúng bằng $k$ hay không.
+    \end{itemize}
 
-Bộ đánh giá chạy độc lập với bộ mã hóa và bộ giải SAT. Kiểm thử đối chiếu duyệt cả 16 phép gán trên bàn $2 \times 2$ cho mỗi trường hợp manh mối được chọn. Với từng phép gán, kiểm thử cố định các biến chính trong CNF và kiểm tra có tồn tại giá trị cho các biến phụ để thỏa mãn CNF hay không. Kết quả này phải trùng với kết quả đánh giá trực tiếp. Các trường hợp được chọn bao gồm hai mẫu mở rộng và trường hợp giao vùng rỗng.
+    Bộ đánh giá chạy độc lập với bộ mã hóa và bộ giải SAT. Kiểm thử đối chiếu duyệt cả 16 phép gán trên bàn $2 \times 2$ cho mỗi trường hợp manh mối được chọn. Với từng phép gán, kiểm thử cố định các biến chính trong CNF và kiểm tra có tồn tại giá trị cho các biến phụ để thỏa mãn CNF hay không. Kết quả này phải trùng với kết quả đánh giá trực tiếp. Các trường hợp được chọn bao gồm hai mẫu mở rộng và trường hợp giao vùng rỗng.
 
-\subsection{Giao diện đồ họa (GUI)}
-\textit{[Mô tả thiết kế giao diện, đính kèm ảnh chụp màn hình minh họa và giải thích các chức năng tương tác (hiển thị lưới nhân vật, tô sáng vùng manh mối khi chọn, phân biệt lỗi phán quyết, cùng các nút \texttt{Load}, \texttt{Restart}, \texttt{Hint}, \texttt{Auto Solve}).]}
+    \subsection{Giao diện đồ họa (GUI)}
+Giao diện là ứng dụng desktop viết bằng Pygame~\cite{pygame}, khởi chạy bằng lệnh \texttt{python main.py}; ảnh nhân vật lấy từ Dragon Ball API~\cite{dragonball_api}. Lưới hiển thị nhãn hàng, cột, tên và nghề nghiệp của từng nhân vật; thẻ đã lật hiện thêm trạng thái và manh mối, còn thẻ úp không lộ thông tin nào. Người chơi chọn một thẻ rồi bấm \texttt{Innocent} hoặc \texttt{Criminal} (phím \texttt{I}/\texttt{C}). Nếu phán quyết được chấp nhận, thẻ lật lên và manh mối mới được thêm vào danh sách. Nếu bị từ chối, bàn chơi giữ nguyên và khung phản hồi phân biệt \texttt{NOT\_PROVABLE} với \texttt{CONTRADICTED} (Hình~\ref{fig:gui_reject}). Bấm vào một manh mối sẽ tô sáng các ô mà manh mối đó tham chiếu. Thanh điều khiển có bốn nút: \texttt{Load} chọn màn trong \texttt{puzzles/}, \texttt{Restart} đưa bàn về trạng thái ban đầu, \texttt{Hint} chỉ ra nhân vật chứng minh được tiếp theo cùng manh mối liên quan mà không đọc đáp án, và \texttt{Auto solve} cho tác tử giải từng bước. Khung \emph{Solver log} hiển thị số lượt gọi SAT, số lần chọn nhánh, lan truyền, quay lui, cùng số biến chính, biến phụ và số mệnh đề của $KB_t$. Giao diện chỉ đọc \texttt{PublicState} từ engine nên không thể làm lộ thẻ úp. Mọi lời gọi tới engine và tác tử đều chạy trên luồng nền để cửa sổ không bị treo.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\linewidth]{image/gui-board.png}
+\caption{Màn \texttt{4x4-01} sau khi nạp: hai thẻ mở ban đầu (\texttt{A1}, \texttt{D4}) và manh mối của Bardock đang được chọn, các ô lân cận của \texttt{A1} được viền xanh.}
+\label{fig:gui_board}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}[t]{0.49\linewidth}
+\centering
+\includegraphics[width=\linewidth]{image/gui-not-provable.png}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\linewidth}
+\centering
+\includegraphics[width=\linewidth]{image/gui-contradicted.png}
+\end{minipage}
+\caption{Hai kiểu từ chối phán quyết. Trái: gọi Bulma (\texttt{C1}) là \emph{Criminal} khi chưa đủ dữ kiện, nhận \texttt{NOT\_PROVABLE}. Phải: gọi Broly (\texttt{B1}) là \emph{Innocent} trong khi các manh mối đã chứng minh Broly là \emph{Criminal}, nhận \texttt{CONTRADICTED}.}
+\label{fig:gui_reject}
+\end{figure}
 
 % ==================== PHẦN 4 ====================
-\section{Mô hình hóa Logic và Các thuật toán Suy diễn}
+    \section{Mô hình hóa Logic và Các thuật toán Suy diễn}
 
-\subsection{Mô hình hóa bài toán bằng Logic Mệnh đề}
+    \subsection{Mô hình hóa bài toán bằng Logic Mệnh đề}
 
 \subsubsection{Biến mệnh đề và Ngôn ngữ manh mối cốt lõi}
 Trên bàn chơi kích thước $N \times N$, hệ thống biểu diễn nội bộ mỗi ô bởi cấu trúc \texttt{Cell(row, col)} với chỉ số bắt đầu từ $0$ ($0 \le \text{row}, \text{col} < N$) và ánh xạ hai chiều với tọa độ hiển thị dạng $\langle\text{Cột}\rangle\langle\text{Hàng}\rangle$ (cột đánh chữ cái từ \texttt{A}, hàng đánh số từ $1$, ví dụ \texttt{Cell(1, 2)} tương ứng với ô \texttt{C2} qua \texttt{parse\_cell} và \texttt{format\_cell} trong \texttt{griductive/regions.py}). Mỗi nhân vật $i$ trên lưới tương ứng với một \emph{biến mệnh đề chính} (primary variable) $C_i$:
@@ -261,7 +336,7 @@ Bên cạnh 6 mẫu cốt lõi, nhóm đã thiết kế và hiện thực đầy
     \end{itemize}
 \end{enumerate}
 
-\subsection{Chuyển đổi tự động sang Dạng chuẩn Hội (CNF Encoding)}
+    \subsection{Chuyển đổi tự động sang Dạng chuẩn Hội (CNF Encoding)}
 
 \subsubsection{Cơ chế xây dựng cơ sở tri thức \texorpdfstring{$KB_t$}{KB\_t}}
 Ở bước suy diễn $t$, phương thức \texttt{build\_kb(state)} của lớp \texttt{GriductiveLogicAgent} (trong \texttt{griductive/agent/inference.py}) chỉ tiếp nhận bản chụp công khai bất biến \texttt{PublicState(board, verdicts, clues)} từ engine, tuyệt đối không truy cập đáp án ẩn hay manh mối của các thẻ chưa lật. Tác tử chuyển toàn bộ thông tin công khai tại bước $t$ cho phương thức \texttt{encode} của \texttt{BasicCNFEncoder} để sinh tự động công thức CNF hoàn chỉnh:
@@ -353,101 +428,271 @@ Xét manh mối mở đầu \texttt{clue-B2} của màn \texttt{3x3-01}: \texttt
 \end{enumerate}
 Tổng hợp lại, riêng manh mối \texttt{clue-B2} tạo ra $5$ biến phụ và $16$ mệnh đề CNF. Khi ghép thêm phán quyết mở sẵn của thẻ \texttt{B2} là \texttt{CRIMINAL} thành mệnh đề đơn vị \texttt{(5,)}, $KB_0$ ban đầu của màn \texttt{3x3-01} có $9$ biến chính, $5$ biến phụ và $17$ mệnh đề; chỉ riêng lan truyền đơn vị từ \texttt{(5,)} qua \texttt{(-5, -11)}, \texttt{(11, -10)}, \texttt{(11, -4)} và \texttt{(10, -2)} đã lập tức suy ra $\neg C_4$ và $\neg C_2$, chứng minh được ngay \texttt{A2} và \texttt{B1} đều là \texttt{INNOCENT}.
 
-\subsection{Bộ giải DPLL SAT Solver}
-\textit{[Trình bày nguyên lý và mã giả thuật toán DPLL tự cài đặt gồm: lan truyền đơn vị (\emph{unit propagation}), phát hiện mâu thuẫn, chọn biến tất định, phân nhánh quay lui và cơ chế ghi nhận thống kê (\emph{decisions}, \emph{propagations}, \emph{backtracks}, \emph{runtime}).]}
+    \subsection{Bộ giải DPLL SAT Solver}
+\texttt{DPLLSolver} (\texttt{solver.py}) là bộ giải do nhóm tự cài đặt theo thủ tục DPLL~\cite{dpll1962}, không dùng thư viện SAT. Đầu vào gồm CNF (mỗi literal là số nguyên khác $0$, dấu dương nghĩa là \emph{Criminal}), bảng biến và một bộ giả thiết tạm thời. Đầu ra là \texttt{SAT} kèm giá trị cho mọi biến, kể cả biến phụ, hoặc \texttt{UNSAT}. Giả thiết chỉ có hiệu lực trong một lần gọi, nên tác tử kiểm tra được $KB_t \wedge C_i$ và $KB_t \wedge \neg C_i$ trên cùng một $KB_t$ mà không phải dựng lại.
 
-\subsection{Tác tử suy diễn (Deductive Logic Agent) và Kiểm tra tính duy nhất}
+\subsubsection{Thuật toán}
+Mã giả dưới đây viết ở dạng đệ quy. Hình~\ref{fig:dpll_flow} là luồng của bản cài đặt: lan truyền đơn vị dùng kỹ thuật hai literal canh~\cite{chaff2001}, và lời gọi đệ quy được thay bằng một ngăn xếp nhánh. Mỗi phần tử ngăn xếp tương ứng một khung đệ quy, nên thứ tự duyệt và kết quả giống hệt mã giả.
 
-\subsubsection{Phân loại hệ quả logic và Vòng lặp suy diễn}
-\textit{[Trình bày phương pháp chứng minh phản chứng để phân loại \texttt{CRIMINAL}, \texttt{INNOCENT}, \texttt{UNKNOWN}, \texttt{INCONSISTENT}; mô tả vòng lặp suy diễn cập nhật $KB_t$, xuất vết suy diễn (\emph{deduction trace}) và cơ chế hoạt động của nút \texttt{Hint}.]}
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,frame=single,columns=fullflexible]
+DPLL(F, A):                          # A: partial assignment
+    A <- UNIT_PROPAGATE(F, A)
+    if some clause is false under A:    return UNSAT
+    x <- smallest-id unassigned variable
+    if x is None:                       return SAT, A
+    if DPLL(F, A + {x = False}) is SAT: return it
+    return DPLL(F, A + {x = True})      # backtrack, then flip
 
-\subsubsection{Kiểm tra tính duy nhất của lời giải (Uniqueness Check)}
-\textit{[Trình bày thuật toán sử dụng mệnh đề chặn nghiệm (\emph{blocking clause}) trên tập manh mối đầy đủ để kiểm tra xem màn chơi có tồn tại duy nhất một nghiệm hay bị mơ hồ/vô nghiệm.]}
+SOLVE(F, assumptions):
+    drop duplicate literals and tautologies; empty clause => UNSAT
+    A <- assumptions + unit clauses of F   # conflict => UNSAT
+    return DPLL(F, A)
+\end{lstlisting}
 
-% ==================== PHẦN 5 ====================
-\clearpage
-\section{Thực nghiệm và Đánh giá}
-\subsection{Thiết lập phép đo}
-Bộ thử gồm 10 màn chính thức trong \texttt{puzzles/} tại commit \texttt{0ee67a6}, cũng là các màn trong danh sách Load của game. Có ba màn $3\times3$, bốn màn $4\times4$ và ba màn $5\times5$. Mỗi màn chạy một lần trong tiến trình riêng trên Linux x86-64, CPU AMD Ryzen 7 6800H, Python 3.11.15, dùng cùng bộ mã hóa CNF và bộ giải DPLL. Lệnh tái lập là \verb|python main.py --benchmark ket-qua.csv --timeout 30|. File \texttt{report/benchmark.csv} lưu số liệu gốc.
-
-Đồng hồ bắt đầu sau khi nạp và kiểm định puzzle, dừng ngay khi vòng suy diễn trả về. Mỗi bước tính cả truy vấn SAT để Agent chọn nước đi và truy vấn SAT để Engine chấm nước đó. Một bước được tính khi Engine chấp nhận mở thẻ. Số biến phụ và số mệnh đề là giá trị lớn nhất trong các KB đã truy vấn. Giới hạn suy diễn là 30 giây cho mỗi màn. Cả 10 màn đều đạt \texttt{SOLVED} trong thời hạn.
-
-\subsection{Kết quả theo kích thước}
-\begin{table}[H]
-\centering\small
-\begin{tabular}{@{}lrrrrrr@{}}
-\toprule
-Bàn & Giải hết & Biến phụ & Mệnh đề & Lượt SAT & Bước & Thời gian (ms) \\
-\midrule
-$3 \times 3$ & 3/3 & 24.0 & 94.0 & 127.3 & 7.0 & 5.89 \\
-$4 \times 4$ & 4/4 & 95.2 & 362.5 & 448.0 & 14.0 & 49.53 \\
-$5 \times 5$ & 3/3 & 261.7 & 977.7 & 1028.7 & 21.7 & 329.17 \\
-\bottomrule
-\end{tabular}
-\caption{Số màn giải hết và giá trị trung bình mỗi màn theo kích thước bàn.}
-\label{tab:benchmark_summary}
-\end{table}
-\subsection{Kết quả từng màn}
-\begin{table}[H]
-\centering\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lrrrrrrrr@{}}
-\toprule
-Màn & Biến C/P & Mệnh đề & Lượt SAT & Chọn & Lan truyền & Quay lui & Bước & ms \\
-\midrule
-\texttt{3x3-01} & 9/19 & 78 & 160 & 0 & 2274 & 0 & 8 & 6.89 \\
-\texttt{3x3-02} & 9/28 & 111 & 126 & 0 & 1546 & 0 & 7 & 5.28 \\
-\texttt{3x3-03} & 9/25 & 93 & 96 & 0 & 1770 & 0 & 6 & 5.49 \\
-\texttt{4x4-01} & 16/105 & 385 & 448 & 242 & 18228 & 24 & 14 & 45.16 \\
-\texttt{4x4-02} & 16/125 & 471 & 448 & 768 & 26256 & 0 & 14 & 73.06 \\
-\texttt{4x4-03} & 16/102 & 386 & 448 & 148 & 17458 & 0 & 14 & 47.29 \\
-\texttt{4x4-04} & 16/49 & 208 & 448 & 210 & 11194 & 6 & 14 & 32.62 \\
-\texttt{5x5-01} & 25/179 & 666 & 1150 & 916 & 86626 & 0 & 23 & 233.54 \\
-\texttt{5x5-02} & 25/332 & 1246 & 880 & 1496 & 145006 & 84 & 20 & 394.12 \\
-\texttt{5x5-03} & 25/274 & 1021 & 1056 & 4160 & 137682 & 580 & 22 & 359.86 \\
-\bottomrule
-\end{tabular}
-\caption{C/P là số biến chính/phụ.}
-\label{tab:benchmark_detailed}
-\end{table}
-
-\subsection{Thời gian suy diễn}
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}
-\begin{axis}[
-    width=0.97\linewidth, height=5.3cm,
-    ybar, bar width=12pt, ymin=0, ymax=450, ytick distance=100,
-    ylabel={Thời gian (ms)}, ymajorgrids, axis lines=left,
-    xtick=data, xticklabels={3x3-01,3x3-02,3x3-03,4x4-01,4x4-02,4x4-03,4x4-04,5x5-01,5x5-02,5x5-03},
-    xticklabel style={font=\scriptsize}, enlarge x limits=0.08,
-]
-\addplot[draw=blue!65!black,fill=blue!45] table[
-    col sep=comma, x expr=\coordindex, y expr=1000*\thisrow{runtime_s}
-] {benchmark.csv};
-\end{axis}
+\node[box] (prep) at (0,0) {Chuẩn hóa CNF};
+\node[decision] (empty) at (0,-2.2) {Mệnh đề\\rỗng?};
+\node[terminal] (unsat) at (4.8,-2.2) {UNSAT};
+\node[box] (init) at (0,-4.6) {Gán giả thiết và\\mệnh đề đơn vị};
+\node[box] (prop) at (0,-6.8) {Lan truyền đơn vị\\(hai literal canh)};
+\node[box] (flip) at (4.8,-6.8) {Quay lui,\\đảo sang True};
+\node[decision] (conf) at (0,-9.0) {Mâu thuẫn?};
+\node[decision] (more) at (4.8,-9.0) {Còn nhánh\\chưa đảo?};
+\node[decision] (left) at (0,-11.4) {Còn biến\\chưa gán?};
+\node[box] (pick) at (-4.6,-11.4) {Chọn biến id nhỏ nhất,\\gán False, lưu nhánh};
+\node[terminal] (sat) at (0,-13.6) {SAT + mô hình đầy đủ};
+\draw[arr] (prep) -- (empty);
+\draw[arr] (empty) -- node[lbl, above] {có} (unsat);
+\draw[arr] (empty) -- node[lbl, right] {không} (init);
+\draw[arr] (init) -- (prop);
+\draw[arr] (prop) -- (conf);
+\draw[arr] (conf) -- node[lbl, above] {có} (more);
+\draw[arr] (more) -- node[lbl, right] {có} (flip);
+\draw[arr] (flip) -- (prop);
+\draw[arr] (more.east) -- ++(1.1,0) |- node[lbl, right, pos=0.25] {không} (unsat.east);
+\draw[arr] (conf) -- node[lbl, right] {không} (left);
+\draw[arr] (left) -- node[lbl, above] {có} (pick);
+\draw[arr] (pick) |- (prop);
+\draw[arr] (left) -- node[lbl, right] {không} (sat);
 \end{tikzpicture}
-\caption{Thời gian suy diễn của từng file trong \texttt{puzzles/}.}
+\caption{Luồng xử lý của \texttt{DPLLSolver}. Mâu thuẫn khi gán giả thiết và mệnh đề đơn vị cũng dẫn tới \texttt{UNSAT}.}
+\label{fig:dpll_flow}
 \end{figure}
 
-\subsection{Nhận xét}
-Trên cả ba màn $3\times3$, lan truyền đơn vị và kiểm tra mâu thuẫn đủ để trả lời mọi truy vấn SAT. Cả bốn màn $4\times4$ đều cần 14 bước và 448 lượt gọi SAT. Màn mới \texttt{4x4-04} mở sẵn hai ô C1 và C2, có cả manh mối \texttt{INTERSECTION} và \texttt{PARITY}. Bộ giải mở 14 ô còn lại trong 32.62 ms, nhanh nhất nhóm. Riêng màn \texttt{4x4-02} có KB đạt 471 mệnh đề và ghi nhận 26\,256 lần lan truyền, cao nhất nhóm. Thời gian đo được cũng dài nhất nhóm.
+\subsubsection{Thống kê và ví dụ}
+\begin{itemize}
+    \item \texttt{decisions}: số lần gán thử một giá trị cho biến phân nhánh, tính cả lần đảo giá trị.
+    \item \texttt{propagations}: số biến được gán do lan truyền đơn vị, gồm cả mệnh đề đơn vị có sẵn; giả thiết không được tính.
+    \item \texttt{backtracks}: số lần bỏ một nhánh thất bại và hoàn tác các phép gán của nó.
+    \item \texttt{runtime\_s}: thời gian của lần gọi, đo bằng \texttt{time.perf\_counter}.
+\end{itemize}
 
-Trên bàn $5\times5$, màn \texttt{5x5-02} chỉ cần 20 bước nhưng mất nhiều thời gian nhất trong bộ thử. Màn này có 1\,246 mệnh đề ở bước lớn nhất và 145\,006 lần lan truyền. Màn \texttt{5x5-03} có nhiều lần quay lui nhất (580). Chỉ đếm số thẻ mở không phản ánh được chi phí của từng truy vấn SAT. Thời gian trong bảng là một lần đo trên một máy; mức dao động giữa các lần chạy chưa được khảo sát.
+Với $F = (x_1 \vee x_2) \wedge (x_1 \vee \neg x_2)$, bộ giải chạy như sau:
+\begin{enumerate}
+    \item Chọn $x_1 = \text{False}$ (decision 1). Lan truyền ép $x_2 = \text{True}$ (propagation 1), khi đó mệnh đề $(x_1 \vee \neg x_2)$ bị sai: mâu thuẫn.
+    \item Quay lui (backtrack 1) và đảo $x_1 = \text{True}$ (decision 2).
+    \item $x_2$ còn tự do nên được chọn với giá trị $\text{False}$ (decision 3). Mọi mệnh đề đều thỏa.
+\end{enumerate}
+Kết quả là \texttt{SAT} với $x_1 = \text{True}$, $x_2 = \text{False}$ và thống kê (3, 1, 1); con số này khớp với kết quả chạy thật của bộ giải.
 
-% ==================== PHẦN 6 ====================
-\section{Video Demo}
-\textit{[Đính kèm liên kết Google Drive công khai của video demo (dài 5--10 phút, có thuyết minh hoặc phụ đề, đã kiểm tra quyền xem bằng trình duyệt ẩn danh) và liệt kê ngắn gọn các nội dung trình diễn giao diện, chơi thủ công và chạy bộ giải tự động.]}
+\texttt{tests/test\_solver.py} kiểm tra các trường hợp biên (CNF rỗng, mệnh đề rỗng, lan truyền dây chuyền, quay lui rồi đảo giá trị, giả thiết không rò sang lần gọi sau) và đối chiếu bộ giải với phép vét cạn trên 400 CNF sinh ngẫu nhiên.
 
-% ==================== TÀI LIỆU THAM KHẢO ====================
-\begin{thebibliography}{9}
-\bibitem{russell2020aima}
-Stuart Russell and Peter Norvig, \emph{Artificial Intelligence: A Modern Approach}, 4th ed. Pearson, 2020.
+    \subsection{Tác tử suy diễn (Deductive Logic Agent) và Kiểm tra tính duy nhất}
 
-\bibitem{dpll1962}
-Martin Davis, George Logemann, and Donald Loveland, ``A Machine Program for Theorem-Proving,'' \emph{Communications of the ACM}, vol. 5, no. 7, pp. 394--397, 1962.
-\end{thebibliography}
+    \subsubsection{Phân loại hệ quả logic và Vòng lặp suy diễn}
+    \textit{[Trình bày phương pháp chứng minh phản chứng để phân loại \texttt{CRIMINAL}, \texttt{INNOCENT}, \texttt{UNKNOWN}, \texttt{INCONSISTENT}; mô tả vòng lặp suy diễn cập nhật $KB_t$, xuất vết suy diễn (\emph{deduction trace}) và cơ chế hoạt động của nút \texttt{Hint}.]}
+
+    \subsubsection{Kiểm tra tính duy nhất của lời giải (Uniqueness Check)}
+\label{sec:uniqueness}
+\texttt{SATPuzzleValidator} (\texttt{validation.py}) chạy khi engine nạp màn, trên \emph{toàn bộ} manh mối kể cả thẻ úp; kết quả không bao giờ được đưa cho tác tử. Gọi $F$ là CNF của toàn bộ manh mối. Đáp án lưu trong file không được thêm vào $F$, vì nếu thêm thì $F$ luôn chỉ còn một nghiệm. Sau khi giải $F$ được mô hình $M$, bộ kiểm định thêm \emph{mệnh đề chặn nghiệm} trên $N^2$ biến chính:
+\[
+    \beta_M = \bigvee_{i=1}^{N^2} \ell_i, \qquad
+    \ell_i = \begin{cases} \neg C_i & \text{nếu } M(C_i) = \text{True},\\ C_i & \text{nếu } M(C_i) = \text{False}. \end{cases}
+\]
+$\beta_M$ chỉ sai tại đúng cách xếp của $M$, nên $F \wedge \beta_M$ còn thỏa được khi và chỉ khi tồn tại cách xếp \emph{Criminal}/\emph{Innocent} thứ hai. Mệnh đề chặn không chứa biến phụ, vì hai mô hình chỉ khác nhau ở biến phụ vẫn là cùng một nghiệm. Do đó phép kiểm tra chỉ tốn đúng hai lượt gọi SAT.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\node[terminal] (err) at (1.85,2.1) {Báo lỗi\\(không nạp)};
+\node[box] (struct) at (0,0) {Cấu trúc\\hợp lệ?};
+\node[box] (eval) at (3.7,0) {Đáp án thỏa\\mọi manh mối?};
+\node[box] (solve1) at (7.3,0) {Giải $F$};
+\node[decision] (d1) at (10.3,0) {SAT?};
+\node[terminal] (unsat) at (13.4,0) {UNSAT};
+\node[box] (solve2) at (10.3,-2.9) {Giải $F \wedge \beta_M$};
+\node[decision] (d2) at (6.5,-2.9) {SAT?};
+\node[terminal] (unique) at (2.6,-2.9) {UNIQUE\\(nạp màn)};
+\node[terminal] (multi) at (6.5,-5.1) {MULTIPLE};
+\draw[arr] (struct) -- node[lbl, above] {có} (eval);
+\draw[arr] (eval) -- node[lbl, above] {có} (solve1);
+\draw[arr] (solve1) -- (d1);
+\draw[arr] (d1) -- node[lbl, above] {không} (unsat);
+\draw[arr] (d1) -- node[lbl, right] {có} (solve2);
+\draw[arr] (solve2) -- (d2);
+\draw[arr] (d2) -- node[lbl, above] {không} (unique);
+\draw[arr] (d2) -- node[lbl, right] {có} (multi);
+\draw[arr] (struct.north) -- node[lbl, left] {không} (err);
+\draw[arr] (eval.north) -- node[lbl, right] {không} (err);
+\end{tikzpicture}
+\caption{Luồng kiểm định khi nạp màn. Bước kiểm tra đáp án dùng bộ đánh giá trực tiếp, độc lập với CNF. Engine chỉ nạp màn có kết quả \texttt{UNIQUE}; mọi trường hợp khác giữ nguyên ván đang chơi.}
+\label{fig:validation_flow}
+\end{figure}
+
+\texttt{tests/test\_validation.py} kiểm thử các trường hợp một nghiệm, hai nghiệm, manh mối mâu thuẫn, mô hình chỉ khác ở biến phụ và đáp án vi phạm manh mối, đồng thời chạy validator trên mọi file trong \texttt{puzzles/}.
+
+\paragraph{Nghiệm duy nhất chưa đủ để giải mà không phải đoán:} Tính duy nhất xét toàn bộ manh mối cùng lúc, còn tác tử chỉ thấy các manh mối được lật dần. Chín màn của phiên bản dữ liệu đầu tiên đều \texttt{UNIQUE}, nhưng bốn màn khiến tác tử dừng ở \texttt{STUCK} (Bảng~\ref{tab:legacy_puzzles}). Vì vậy bộ màn trong \texttt{puzzles/} được thiết kế lại và phải thỏa thêm điều kiện ``tác tử giải trọn từ các thẻ mở ban đầu''.
+
+    \begin{table}[H]
+    \centering\small
+    \begin{tabular}{@{}lccc@{}}
+    \toprule
+    \textbf{Màn (bản đầu)} & \textbf{Tính duy nhất} & \textbf{Kết quả tác tử} & \textbf{Số thẻ đã mở} \\
+    \midrule
+    \texttt{3x3-01} & \texttt{UNIQUE} & \texttt{SOLVED} & 9/9 \\
+    \texttt{3x3-02} & \texttt{UNIQUE} & \texttt{STUCK} & 1/9 \\
+    \texttt{3x3-03} & \texttt{UNIQUE} & \texttt{STUCK} & 1/9 \\
+    \texttt{4x4-01}, \texttt{4x4-02}, \texttt{4x4-03} & \texttt{UNIQUE} & \texttt{SOLVED} & 16/16 \\
+    \texttt{5x5-01} & \texttt{UNIQUE} & \texttt{SOLVED} & 25/25 \\
+    \texttt{5x5-02} & \texttt{UNIQUE} & \texttt{STUCK} & 4/25 \\
+    \texttt{5x5-03} & \texttt{UNIQUE} & \texttt{STUCK} & 2/25 \\
+    \bottomrule
+    \end{tabular}
+    \caption{Chín màn của phiên bản dữ liệu đầu tiên: nghiệm duy nhất nhưng không phải màn nào cũng giải được mà không đoán.}
+    \label{tab:legacy_puzzles}
+    \end{table}
 
 
+    % ==================== PHẦN 5 ====================
+    \clearpage
+    \section{Thực nghiệm và Đánh giá}
+    \subsection{Thiết lập phép đo}
+    Bộ thử gồm 10 màn chính thức trong \texttt{puzzles/} tại commit \texttt{0ee67a6}, cũng là các màn trong danh sách Load của game. Có ba màn $3\times3$, bốn màn $4\times4$ và ba màn $5\times5$. Mỗi màn chạy một lần trong tiến trình riêng trên Linux x86-64, CPU AMD Ryzen 7 6800H, Python 3.11.15, dùng cùng bộ mã hóa CNF và bộ giải DPLL. Lệnh tái lập là \verb|python main.py --benchmark ket-qua.csv --timeout 30|. File \texttt{report/benchmark.csv} lưu số liệu gốc.
+
+    Đồng hồ bắt đầu sau khi nạp và kiểm định puzzle, dừng ngay khi vòng suy diễn trả về. Mỗi bước tính cả truy vấn SAT để Agent chọn nước đi và truy vấn SAT để Engine chấm nước đó. Một bước được tính khi Engine chấp nhận mở thẻ. Số biến phụ và số mệnh đề là giá trị lớn nhất trong các KB đã truy vấn. Giới hạn suy diễn là 30 giây cho mỗi màn. Cả 10 màn đều đạt \texttt{SOLVED} trong thời hạn.
+
+    \subsection{Kết quả theo kích thước}
+    \begin{table}[H]
+    \centering\small
+    \begin{tabular}{@{}lrrrrrr@{}}
+    \toprule
+    Bàn & Giải hết & Biến phụ & Mệnh đề & Lượt SAT & Bước & Thời gian (ms) \\
+    \midrule
+    $3 \times 3$ & 3/3 & 24.0 & 94.0 & 127.3 & 7.0 & 5.89 \\
+    $4 \times 4$ & 4/4 & 95.2 & 362.5 & 448.0 & 14.0 & 49.53 \\
+    $5 \times 5$ & 3/3 & 261.7 & 977.7 & 1028.7 & 21.7 & 329.17 \\
+    \bottomrule
+    \end{tabular}
+    \caption{Số màn giải hết và giá trị trung bình mỗi màn theo kích thước bàn.}
+    \label{tab:benchmark_summary}
+    \end{table}
+    \subsection{Kết quả từng màn}
+    \begin{table}[H]
+    \centering\small
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular}{@{}lrrrrrrrr@{}}
+    \toprule
+    Màn & Biến C/P & Mệnh đề & Lượt SAT & Chọn & Lan truyền & Quay lui & Bước & ms \\
+    \midrule
+    \texttt{3x3-01} & 9/19 & 78 & 160 & 0 & 2274 & 0 & 8 & 6.89 \\
+    \texttt{3x3-02} & 9/28 & 111 & 126 & 0 & 1546 & 0 & 7 & 5.28 \\
+    \texttt{3x3-03} & 9/25 & 93 & 96 & 0 & 1770 & 0 & 6 & 5.49 \\
+    \texttt{4x4-01} & 16/105 & 385 & 448 & 242 & 18228 & 24 & 14 & 45.16 \\
+    \texttt{4x4-02} & 16/125 & 471 & 448 & 768 & 26256 & 0 & 14 & 73.06 \\
+    \texttt{4x4-03} & 16/102 & 386 & 448 & 148 & 17458 & 0 & 14 & 47.29 \\
+    \texttt{4x4-04} & 16/49 & 208 & 448 & 210 & 11194 & 6 & 14 & 32.62 \\
+    \texttt{5x5-01} & 25/179 & 666 & 1150 & 916 & 86626 & 0 & 23 & 233.54 \\
+    \texttt{5x5-02} & 25/332 & 1246 & 880 & 1496 & 145006 & 84 & 20 & 394.12 \\
+    \texttt{5x5-03} & 25/274 & 1021 & 1056 & 4160 & 137682 & 580 & 22 & 359.86 \\
+    \bottomrule
+    \end{tabular}
+    \caption{C/P là số biến chính/phụ.}
+    \label{tab:benchmark_detailed}
+    \end{table}
+
+    \subsection{Thời gian suy diễn}
+    \begin{figure}[H]
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        width=0.97\linewidth, height=5.3cm,
+        ybar, bar width=12pt, ymin=0, ymax=450, ytick distance=100,
+        ylabel={Thời gian (ms)}, ymajorgrids, axis lines=left,
+        xtick=data, xticklabels={3x3-01,3x3-02,3x3-03,4x4-01,4x4-02,4x4-03,4x4-04,5x5-01,5x5-02,5x5-03},
+        xticklabel style={font=\scriptsize}, enlarge x limits=0.08,
+    ]
+    \addplot[draw=blue!65!black,fill=blue!45] table[
+        col sep=comma, x expr=\coordindex, y expr=1000*\thisrow{runtime_s}
+    ] {benchmark.csv};
+    \end{axis}
+    \end{tikzpicture}
+    \caption{Thời gian suy diễn của từng file trong \texttt{puzzles/}.}
+    \end{figure}
+
+    \subsection{Nhận xét}
+    Trên cả ba màn $3\times3$, lan truyền đơn vị và kiểm tra mâu thuẫn đủ để trả lời mọi truy vấn SAT. Cả bốn màn $4\times4$ đều cần 14 bước và 448 lượt gọi SAT. Màn mới \texttt{4x4-04} mở sẵn hai ô C1 và C2, có cả manh mối \texttt{INTERSECTION} và \texttt{PARITY}. Bộ giải mở 14 ô còn lại trong 32.62 ms, nhanh nhất nhóm. Riêng màn \texttt{4x4-02} có KB đạt 471 mệnh đề và ghi nhận 26\,256 lần lan truyền, cao nhất nhóm. Thời gian đo được cũng dài nhất nhóm.
+
+    Trên bàn $5\times5$, màn \texttt{5x5-02} chỉ cần 20 bước nhưng mất nhiều thời gian nhất trong bộ thử. Màn này có 1\,246 mệnh đề ở bước lớn nhất và 145\,006 lần lan truyền. Màn \texttt{5x5-03} có nhiều lần quay lui nhất (580). Chỉ đếm số thẻ mở không phản ánh được chi phí của từng truy vấn SAT. Thời gian trong bảng là một lần đo trên một máy; mức dao động giữa các lần chạy chưa được khảo sát.
+
+    \subsection{Trường hợp thất bại và hạn chế}
+    \paragraph{Trường hợp thất bại:} Trên bộ 10 màn chính thức, không có màn nào bị \texttt{TIMEOUT}, \texttt{ERROR}, \texttt{STUCK} hay \texttt{INCONSISTENT}. Tuy vậy, bộ màn này đã được thiết kế để giải được. Trên phiên bản dữ liệu đầu tiên (Bảng~\ref{tab:legacy_puzzles}), tác tử dừng ở \texttt{STUCK} tại bốn trên chín màn, dù cả chín màn đều có nghiệm duy nhất. Ở các màn này, tác tử không đoán mà trả về \texttt{STUCK} và giữ nguyên các thẻ còn úp, đúng như yêu cầu của đề.
+
+    \paragraph{Hạn chế:}
+    \begin{itemize}
+        \item Bộ giải DPLL dùng quay lui theo thứ tự thời gian, chưa có học mệnh đề từ xung đột (CDCL) hay heuristic chọn biến động. Số lần chọn nhánh tăng từ $0$ ở bàn $3\times3$ lên khoảng 900 đến hơn 4\,000 ở bàn $5\times5$, kéo theo thời gian tăng nhanh (Bảng~\ref{tab:benchmark_detailed}).
+        \item Mỗi bước, tác tử gọi bộ giải $1 + 2m$ lần với $m$ ô chưa biết, và engine lặp lại phép phân loại này khi chấm phán quyết. Hai phía đều đúng thiết kế tách vai trò nhưng làm số lượt gọi SAT tăng gấp đôi.
+        \item Nút \texttt{Hint} chỉ ra manh mối đã lật đầu tiên có nhắc tới ô bị ép buộc. Manh mối này liên quan đến ô đó nhưng chưa chắc là manh mối thực sự quyết định phép chứng minh.
+    \end{itemize}
+
+    % ==================== PHẦN 6 ====================
+    \section{Video Demo}
+    \textit{[Đính kèm liên kết Google Drive công khai của video demo (dài 5--10 phút, có thuyết minh hoặc phụ đề, đã kiểm tra quyền xem bằng trình duyệt ẩn danh) và liệt kê ngắn gọn các nội dung trình diễn giao diện, chơi thủ công và chạy bộ giải tự động.]}
+
+    % ==================== TÀI LIỆU THAM KHẢO ====================
+    \begin{thebibliography}{9}
+    \bibitem{griductive_game}
+    Knotwise Games, \emph{Griductive}. Trang chơi: \url{https://knotwise.games/games/griductive}; hướng dẫn chơi: \url{https://knotwise.games/games/griductive/how-to-play}.
+
+    \bibitem{russell2020aima}
+    Stuart Russell and Peter Norvig, \emph{Artificial Intelligence: A Modern Approach}, 4th ed. Pearson, 2020.
+
+    \bibitem{dpll1962}
+    Martin Davis, George Logemann, and Donald Loveland, ``A Machine Program for Theorem-Proving,'' \emph{Communications of the ACM}, vol. 5, no. 7, pp. 394--397, 1962.
+
+    \bibitem{chaff2001}
+    Matthew W. Moskewicz, Conor F. Madigan, Ying Zhao, Lintao Zhang, and Sharad Malik, ``Chaff: Engineering an Efficient SAT Solver,'' in \emph{Proceedings of the 38th Design Automation Conference (DAC)}, pp. 530--535, 2001.
+
+    \bibitem{pygame}
+    Pygame Community, \emph{Pygame 2.6 Documentation}. \url{https://www.pygame.org/docs/}
+
+    \bibitem{dragonball_api}
+    Dragon Ball API, \emph{Characters} (ảnh nhân vật). \url{https://dragonball-api.com/}. Nhân vật \emph{Dragon Ball} \copyright{} Akira Toriyama / Bird Studio, Shueisha, Toei Animation.
+    \end{thebibliography}
+
+    \appendix
+    \section{Phụ lục: Sử dụng công cụ Trí tuệ Nhân tạo Tạo sinh (Generative AI)}
+% TODO: mỗi thành viên bổ sung công cụ AI đã dùng, mục đích và prompt tiêu biểu (ghi đúng thực tế).
+Nhóm sử dụng các mô hình ngôn ngữ lớn (LLM) như công cụ hỗ trợ. Bộ mã hóa CNF, bộ giải DPLL và tác tử suy diễn đều do nhóm tự xây dựng, không dùng thư viện SAT có sẵn. Mọi nội dung do AI gợi ý đều được nhóm kiểm tra lại bằng mã nguồn, kiểm thử tự động và kết quả chạy thực tế. Bảng~\ref{tab:genai} tóm tắt cách sử dụng.
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.14\textwidth} p{0.38\textwidth} p{0.42\textwidth}@{}}
+\toprule
+\textbf{Công cụ} & \textbf{Mục đích sử dụng} & \textbf{Prompt tiêu biểu} \\
+\midrule
+Claude Code & Đề xuất ý tưởng và chủ đề cho giao diện, đánh giá nguồn hình ảnh có thể dùng. Nhóm chốt chủ đề Dragon Ball. & ``Phần chốt GUI \ldots\ ý tưởng lên cho giao diện này sẽ như thế nào, vì sao lại lên như vậy, nếu lên như vậy thì liệu có nguồn hay không, và nếu không thì tạo bằng cách gì? Cho tôi một số chủ đề \ldots\ và nên có chủ đề Dragon Ball nha.'' \\
+Claude Code & Thiết kế lại giao diện theo phong cách tối giản, tông tối, tham khảo giao diện gốc của Knotwise Games; thay ảnh nhân vật tự vẽ bằng ảnh nhân vật Dragon Ball. & ``Tôi đang muốn giao diện minimalism với chủ đề Dragon Ball, đồng thời tôi muốn ảnh thẻ nhân vật là các nhân vật trong Dragon Ball \ldots\ giao diện tham khảo ở Knotwise Games.'' và ``Tôi đang muốn làm theo theme tối màu, phải minimalism nữa.'' \\
+Claude Code & Rà soát mức độ đáp ứng yêu cầu của đề, chụp ảnh giao diện và soạn nháp các mục báo cáo. & ``Giả sử bạn là chuyên gia trong lĩnh vực kiểm thử và đánh giá game, đọc nội dung đồ án trong thư mục data và kiểm lại xem đồ án của tôi đã đáp ứng đủ yêu cầu chưa.'' \\
+% TODO: thêm dòng cho các thành viên khác, ví dụ:
+% ChatGPT & Tìm hiểu ... & ``...'' \\
+\bottomrule
+\end{tabular}
+\caption{Các công cụ AI tạo sinh đã sử dụng.}
+\label{tab:genai}
+\end{table}
 
 \end{document}
