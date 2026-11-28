@@ -1,5 +1,5 @@
 {
-  "id": "puzzle-4x4-hard",
+  "id": "puzzle-4x4-01",
   "size": 4,
   "characters": [
     {"cell": "A1", "name": "Bardock", "profession": "Saiyan"},

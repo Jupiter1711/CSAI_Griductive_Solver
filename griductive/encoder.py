@@ -113,6 +113,8 @@ def _get_var_id(cell: Cell, var_map: VarMap) -> int:
 
 
 def _get_literal(cell: Cell, status: Status, var_map: VarMap) -> Literal:
+    if not isinstance(status, Status):
+        raise ValueError(f"Invalid cell status: {status!r}")
     var_id = _get_var_id(cell, var_map)
     if status == Status.CRIMINAL:
         return var_id
@@ -229,8 +231,8 @@ def _encode_count_literals(
 
     n = len(literals)
 
-    if not 0 <= k <= n:
-        raise ValueError("k must be between 0 and the region size.")
+    if type(k) is not int or not 0 <= k <= n:
+        raise ValueError("k must be an integer between 0 and the region size.")
 
     if kind == CountKind.AT_MOST:
         return at_most_encode(

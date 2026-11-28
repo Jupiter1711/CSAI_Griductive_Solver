@@ -6,11 +6,10 @@ from main import PUZZLE_DIR, new_system
 
 
 @pytest.mark.parametrize(
-    "filename",
-    [f"{size}x{size}-{number:02}.json" for size in (3, 4, 5) for number in (1, 2, 3)],
+    "path", sorted(PUZZLE_DIR.glob("*.json")), ids=lambda path: path.stem
 )
-def test_official_puzzle_solves_from_initial_reveals(filename):
-    puzzle = JsonPuzzleLoader().load(PUZZLE_DIR / filename)
+def test_official_puzzle_solves_from_initial_reveals(path):
+    puzzle = JsonPuzzleLoader().load(path)
     system = new_system()
     system.engine.load(puzzle)
 

@@ -79,6 +79,26 @@ def test_fact_innocent(board, encoder):
     assert encoded.cnf == ((-3,),)
 
 
+def test_invalid_status_rejected_for_fact_and_verdict(board, encoder):
+    cell = Cell(0, 0)
+    with pytest.raises(ValueError):
+        encoder.encode(board, (FactClue("f", cell, cell, "TYPO"),), ())
+    with pytest.raises(ValueError):
+        encoder.encode(board, (), (Verdict(cell, "TYPO"),))
+
+
+@pytest.mark.parametrize("k", [True, False, 1.0, "1"])
+def test_count_parameters_require_integers(board, encoder, k):
+    cell = Cell(0, 0)
+    region = RowRegion(0)
+    for clue in (
+        CountClue("c", cell, CountKind.EXACTLY, k, region),
+        IntersectionClue("i", cell, k, (region,)),
+    ):
+        with pytest.raises(ValueError):
+            encoder.encode(board, (clue,), ())
+
+
 def test_binary_same(board, encoder):
     clue = BinaryClue(
         id="B1",
