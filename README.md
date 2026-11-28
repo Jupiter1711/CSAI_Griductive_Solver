@@ -64,6 +64,34 @@ python main.py --puzzle puzzles/4x4-01.json
 Phím tắt: mũi tên chọn ô, `I`/`C` kết luận Innocent/Criminal, `H` gợi ý,
 `A` tự giải, `R` chơi lại, `L` mở danh sách puzzle.
 
+### Bộ puzzle chính thức
+
+`puzzles/` chứa 9 màn chính thức, mỗi kích thước 3×3, 4×4 và 5×5 có 3 màn.
+GUI và benchmark mặc định dùng thư mục này. CI chạy bộ giải từ các thẻ mở ban đầu
+của từng màn và kiểm tra cả 9 màn đạt `SOLVED` với đáp án đúng.
+
+`data/` lưu các phiên bản tham khảo. Bốn màn `3x3-02`, `3x3-03`, `5x5-02` và
+`5x5-03` có cùng ID với bản chính thức nhưng khác danh sách thẻ mở ban đầu
+(`initially_revealed`), nên bộ giải dừng ở `STUCK`. Khi tái lập số liệu báo cáo,
+dùng các file trong `puzzles/`.
+
+## Chạy benchmark
+
+```bash
+python main.py --benchmark ket-qua.csv
+python main.py --benchmark mot-man.csv --puzzle puzzles/3x3-01.json --timeout 30
+```
+
+Lệnh đầu chạy lần lượt mọi file JSON trong `puzzles/` bằng DPLL và tạo một CSV mới.
+Mỗi màn chạy trong một tiến trình riêng. Giới hạn mặc định là 30 giây cho khởi tạo
+và 30 giây cho suy diễn. `runtime_s` chỉ đo vòng suy diễn, gồm cả Agent và Judge.
+CSV lưu số biến chính, số biến phụ và mệnh đề cao nhất, tổng lượt gọi SAT,
+decisions, propagations, backtracks và số lần mở thẻ thành công.
+Đọc `terminal_status` để phân biệt `SOLVED` với `STUCK`. Màn lỗi hoặc quá hạn
+vẫn có dòng kết quả (`ERROR` hoặc `TIMEOUT`), các số đếm chưa thu được để trống.
+Chọn tên file mới cho mỗi lần đo. Nhánh `report` lưu kết quả dùng trong báo cáo
+tại `report/benchmark.csv`.
+
 ## Quy trình trước khi commit
 
 Mỗi lần mở terminal mới, nhớ **kích hoạt venv trước**:
