@@ -161,18 +161,197 @@ Bộ đánh giá chạy độc lập với bộ mã hóa và bộ giải SAT. Ki
 \subsection{Mô hình hóa bài toán bằng Logic Mệnh đề}
 
 \subsubsection{Biến mệnh đề và Ngôn ngữ manh mối cốt lõi}
-\textit{[Định nghĩa biến mệnh đề chính $C_i$, cách đánh chỉ số biến tất định, tách biệt biến phụ và lập bảng tóm tắt ngữ nghĩa logic của 6 mẫu manh mối cốt lõi (\texttt{FACT}, \texttt{SAME}, \texttt{DIFFERENT}, \texttt{EXACTLY}, \texttt{AT\_LEAST}, \texttt{AT\_MOST}).]}
+Trên bàn chơi kích thước $N \times N$, hệ thống biểu diễn nội bộ mỗi ô bởi cấu trúc \texttt{Cell(row, col)} với chỉ số bắt đầu từ $0$ ($0 \le \text{row}, \text{col} < N$) và ánh xạ hai chiều với tọa độ hiển thị dạng $\langle\text{Cột}\rangle\langle\text{Hàng}\rangle$ (cột đánh chữ cái từ \texttt{A}, hàng đánh số từ $1$, ví dụ \texttt{Cell(1, 2)} tương ứng với ô \texttt{C2} qua \texttt{parse\_cell} và \texttt{format\_cell} trong \texttt{griductive/regions.py}). Mỗi nhân vật $i$ trên lưới tương ứng với một \emph{biến mệnh đề chính} (primary variable) $C_i$:
+\[
+C_i =
+\begin{cases}
+\text{True},  & \text{nếu nhân vật } i \text{ là \emph{Criminal} (tội phạm)}, \\
+\text{False}, & \text{nếu nhân vật } i \text{ là \emph{Innocent} (người vô tội)}.
+\end{cases}
+\]
+
+Để bảo đảm tính tái lập giữa các lượt chạy và giữa tác tử suy diễn với bộ kiểm định, \texttt{BasicCNFEncoder} (\texttt{griductive/encoder.py}) khởi tạo ánh xạ biến \texttt{VarMap} một cách \emph{tất định}:
+\begin{itemize}
+    \item \textbf{Đánh chỉ số biến chính theo thứ tự \emph{row-major}:} Hàm \texttt{\_create\_var\_map} sắp xếp toàn bộ ô trong \texttt{board.characters} theo thứ tự từ điển $(\text{row}, \text{col})$ để tạo bộ \texttt{VarMap.primary} có độ dài $N^2$. Ô ở vị trí $idx \in \{0, \dots, N^2 - 1\}$ được gán định danh biến SAT cố định là:
+    \[
+    \text{id}(r, c) = idx + 1 = r \cdot N + c + 1 \in \{1, 2, \dots, N^2\}.
+    \]
+    Ví dụ, trên bàn $3 \times 3$, các ô \texttt{A1, B1, C1, A2, B2, C2, A3, B3, C3} lần lượt mang định danh $1, 2, \dots, 9$. Trong công thức CNF (\texttt{Literal = int} khác $0$), literal dương $+id$ biểu diễn $C_i$ (\texttt{CRIMINAL}) và literal âm $-id$ biểu diễn $\neg C_i$ (\texttt{INNOCENT}).
+
+    \item \textbf{Tách biệt biến phụ:} Khi mã hóa các ràng buộc phức tạp (như manh mối đếm hoặc chẵn lẻ), bộ mã hóa cấp phát tuần tự các \emph{biến phụ} (auxiliary variables) thông qua hàm \texttt{allocate\_aux()} bắt đầu từ $N^2 + 1$ đến $N^2 + \text{auxiliary\_count}$, lưu tách biệt qua trường \texttt{VarMap.auxiliary\_count}. Mỗi manh mối được cấp phát tập biến phụ độc lập, không bao giờ dùng chung định danh giữa các manh mối khác nhau. Nhờ đó, tác tử suy diễn chỉ cần đặt giả định (\texttt{assumptions}) và phân loại trên tập biến chính $\{1, \dots, N^2\}$, đồng thời bộ kiểm tra tính duy nhất (\texttt{SATPuzzleValidator.check\_uniqueness}) chỉ dựng mệnh đề chặn nghiệm trên các biến chính mà không xem sai khác ở biến phụ là nghiệm mới.
+\end{itemize}
+
+Các manh mối có phạm vi vùng được chuẩn hóa qua \texttt{GridRegionResolver.resolve} (\texttt{griductive/regions.py}) để trả về một tuple các \texttt{Cell} phân biệt theo thứ tự \emph{row-major} (nếu tọa độ ngoài biên hoặc danh sách tường minh có phần tử trùng lặp, hàm ném ngoại lệ \texttt{ValueError}):
+\begin{itemize}
+    \item \texttt{RowRegion(row)} và \texttt{ColumnRegion(col)}: toàn bộ $N$ ô thuộc hàng \texttt{row} hoặc cột \texttt{col} (trong JSON đánh số hàng từ $1$ và cột theo chữ cái \texttt{A..Z}, mở rộng \texttt{AA..} theo hệ cơ số 26).
+    \item \texttt{NeighborRegion(cell)}: các ô lân cận ngang, dọc, chéo quanh \texttt{cell} và loại trừ chính \texttt{cell}, không cuộn qua biên bàn (ô góc có $3$, ô biên có $5$, ô giữa có $8$ lân cận).
+    \item \texttt{ExplicitRegion(cells)}: tập hợp tường minh các ô phân biệt (cho phép vùng rỗng).
+\end{itemize}
+
+Trong \texttt{griductive/models.py}, 6 mẫu manh mối cốt lõi được mô hình hóa bằng ba lớp bất biến \texttt{FactClue}, \texttt{BinaryClue} và \texttt{CountClue}. Lưu ý rằng mọi manh mối đã lật đều mang giá trị chân lý đúng bất kể ô sở hữu (\texttt{owner}) là \emph{Criminal} hay \emph{Innocent}. Quy ước $C_i \in \{0, 1\}$ khi lấy tổng (với $\text{True} \equiv 1$, $\text{False} \equiv 0$), ngữ nghĩa logic của 6 mẫu cốt lõi được tóm tắt trong Bảng~\ref{tab:core_clues}.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4.5pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}llllp{0.31\textwidth}@{}}
+\toprule
+\textbf{Mẫu} & \textbf{Lớp} & \textbf{Tham số} & \textbf{Ngữ nghĩa logic} & \textbf{Ý nghĩa và điều kiện} \\
+\midrule
+\texttt{FACT} & \texttt{FactClue} & \texttt{target}, \texttt{status} &
+$C_t$ hoặc $\neg C_t$ &
+Ô \texttt{target} ($t$) là \emph{Criminal} ($C_t$) hoặc \emph{Innocent} ($\neg C_t$). \\
+\texttt{SAME} & \texttt{BinaryClue} & \texttt{left}, \texttt{right} &
+$C_l \leftrightarrow C_r$ &
+Hai nhân vật \texttt{left} ($l$) và \texttt{right} ($r$) có cùng trạng thái. \\
+\texttt{DIFFERENT} & \texttt{BinaryClue} & \texttt{left}, \texttt{right} &
+$C_l \oplus C_r$ &
+Hai nhân vật \texttt{left} ($l$) và \texttt{right} ($r$) khác trạng thái nhau. \\
+\texttt{EXACTLY} & \texttt{CountClue} & $k$, \texttt{region} ($R$) &
+$\sum_{i \in R} C_i = k$ &
+Có đúng $k$ tội phạm trong vùng $R$ ($k \in \mathbb{Z},\; 0 \le k \le |R|$); $k=0$ ứng với ``không có tội phạm''. \\
+\texttt{AT\_LEAST} & \texttt{CountClue} & $k$, \texttt{region} ($R$) &
+$\sum_{i \in R} C_i \ge k$ &
+Có ít nhất $k$ tội phạm trong vùng $R$ ($k \in \mathbb{Z},\; 0 \le k \le |R|$). \\
+\texttt{AT\_MOST} & \texttt{CountClue} & $k$, \texttt{region} ($R$) &
+$\sum_{i \in R} C_i \le k$ &
+Có tối đa $k$ tội phạm trong vùng $R$ ($k \in \mathbb{Z},\; 0 \le k \le |R|$). \\
+\bottomrule
+\end{tabular}
+\caption{Ngữ nghĩa logic mệnh đề của 6 mẫu manh mối cốt lõi.}
+\label{tab:core_clues}
+\end{table}
 
 \subsubsection{Các manh mối mở rộng (Clue Extensions)}
-\textit{[Trình bày cú pháp, ngữ nghĩa logic và cách xử lý của ít nhất 2 mẫu manh mối mở rộng khác biệt mà nhóm đã hiện thực.]}
+Bên cạnh 6 mẫu cốt lõi, nhóm đã thiết kế và hiện thực đầy đủ \textbf{2 mẫu manh mối mở rộng} khác biệt về cấu trúc lẫn phương pháp mã hóa, đồng bộ từ tầng mô hình (\texttt{griductive/models.py}), bộ đọc JSON (\texttt{griductive/puzzle\_io.py}), bộ đánh giá trực tiếp (\texttt{DirectClueEvaluator}), bộ mã hóa CNF (\texttt{BasicCNFEncoder}) đến hiển thị và tô sáng vùng trên giao diện (\texttt{griductive/gui/text.py}, \texttt{griductive/gui/highlight.py}), và đưa vào màn chơi thực nghiệm \texttt{4x4-04} ở Phần 5:
+
+\begin{enumerate}
+    \item \textbf{Manh mối chẵn lẻ --- \texttt{PARITY} (\texttt{ParityClue}):}
+    \begin{itemize}
+        \item \emph{Cú pháp:} Biểu diễn bởi \texttt{ParityClue(id, owner, kind, region)} với \texttt{kind} thuộc \texttt{ParityKind} (\texttt{EVEN} hoặc \texttt{ODD}). Trong định dạng JSON, manh mối khai báo \texttt{"type": "PARITY"}, trường \texttt{"parity"} nhận giá trị \texttt{"EVEN"} hoặc \texttt{"ODD"}, cùng một vùng \texttt{"region"} hợp lệ (ví dụ tại ô \texttt{B4} trong \texttt{4x4-04}: \texttt{PARITY(ODD, ROW 2)}).
+        \item \emph{Ngữ nghĩa logic:} Với tập ô $R = \{i_1, i_2, \dots, i_m\}$ thu được từ vùng tham chiếu, manh mối ràng buộc tổng số \emph{Criminal} trong $R$ là số chẵn hoặc số lẻ:
+        \[
+        \text{PARITY}(\text{EVEN}, R) \equiv \left(\bigoplus_{t=1}^{m} C_{i_t} = \text{False}\right) \iff \left(\sum_{t=1}^{m} C_{i_t}\right) \bmod 2 = 0,
+        \]
+        \[
+        \text{PARITY}(\text{ODD}, R) \equiv \left(\bigoplus_{t=1}^{m} C_{i_t} = \text{True}\right) \iff \left(\sum_{t=1}^{m} C_{i_t}\right) \bmod 2 = 1.
+        \]
+        \item \emph{Cách xử lý:} Trong \texttt{DirectClueEvaluator}, bộ đánh giá đếm số ô \texttt{CRIMINAL} trong $R$ và kiểm tra \texttt{count \% 2}. Trong \texttt{BasicCNFEncoder} (\texttt{\_parity\_encode}), thay vì liệt kê $2^{m-1}$ tổ hợp chẵn lẻ, hệ thống dùng \emph{chuỗi cổng XOR kiểu Tseitin} trên dãy literal $(x_1, \dots, x_m)$:
+        \begin{itemize}
+            \item Nếu $m = 0$ (vùng rỗng): \texttt{EVEN} luôn đúng nên trả về CNF rỗng \texttt{()}; \texttt{ODD} vô nghiệm nên trả về \texttt{((),)} (mệnh đề rỗng gây \texttt{UNSAT}).
+            \item Nếu $m = 1$: trả về trực tiếp một mệnh đề đơn vị $(x_1,)$ cho \texttt{ODD} hoặc $(\neg x_1,)$ cho \texttt{EVEN}.
+            \item Nếu $m \ge 2$: với $m > 2$, cấp phát $m - 2$ biến phụ $a_1, \dots, a_{m-2}$ để tính dần tổng XOR tiền tố $a_1 \leftrightarrow (x_1 \oplus x_2)$, $a_t \leftrightarrow (a_{t-1} \oplus x_{t+1})$. Mỗi cổng XOR $u \oplus v \leftrightarrow r$ được \texttt{\_xor\_encode} khai triển thành 4 mệnh đề 3-literal:
+            \[
+            (\neg u \lor \neg v \lor \neg r) \land (u \lor v \lor \neg r) \land (u \lor \neg v \lor r) \land (\neg u \lor v \lor r).
+            \]
+            Cuối cùng, đầu ra trung gian cuối $\mathit{cur}$ ($x_1$ nếu $m=2$, hoặc $a_{m-2}$ nếu $m \ge 3$) được ràng buộc với phần tử cuối $x_m$ bằng 2 mệnh đề 2-literal: $(\neg \mathit{cur} \lor x_m) \land (\mathit{cur} \lor \neg x_m)$ cho \texttt{EVEN} ($\mathit{cur} \leftrightarrow x_m$), hoặc $(\mathit{cur} \lor x_m) \land (\neg \mathit{cur} \lor \neg x_m)$ cho \texttt{ODD} ($\mathit{cur} \oplus x_m$). Tổng chi phí tăng tuyến tính theo $m$: đúng $m - 2$ biến phụ và $4m - 6$ mệnh đề với mọi $m \ge 2$.
+        \end{itemize}
+    \end{itemize}
+
+    \item \textbf{Manh mối giao vùng --- \texttt{INTERSECTION} (\texttt{IntersectionClue}):}
+    \begin{itemize}
+        \item \emph{Cú pháp:} Biểu diễn bởi \texttt{IntersectionClue(id, owner, k, regions)} với $k \in \mathbb{Z}$ và \texttt{regions} là một tuple gồm các vùng. Trong tệp JSON, manh mối có \texttt{"type": "INTERSECTION"}, trường \texttt{"k"} và mảng \texttt{"regions"} chứa tối thiểu 2 vùng hợp lệ (ví dụ tại ô \texttt{C1} trong \texttt{4x4-04}: \texttt{INTERSECTION(k=0, [NEIGHBORS(B4), NEIGHBORS(B2)])}).
+        \item \emph{Ngữ nghĩa logic:} Đặt $S = \bigcap_{j=1}^{p} R_j$ là giao của các tập ô đã giải từ \texttt{regions}. Manh mối khẳng định có đúng $k$ nhân vật \emph{Criminal} nằm đồng thời trong tất cả các vùng thành phần:
+        \[
+        \sum_{i \in S} C_i = k, \qquad 0 \le k \le |S|.
+        \]
+        Khi giao của các vùng là tập rỗng ($S = \emptyset$), manh mối vẫn hợp lệ nếu $k = 0$ (mã hóa thành CNF rỗng \texttt{()}) và ném \texttt{ValueError} nếu $k > |S|$.
+        \item \emph{Cách xử lý:} Hàm \texttt{\_get\_intersection\_cells} (và \texttt{intersect\_regions}) giải từng vùng qua \texttt{GridRegionResolver}, lấy giao liên tiếp và sắp xếp kết quả theo thứ tự \emph{row-major} để cố định thứ tự biến. \texttt{DirectClueEvaluator} đếm số \texttt{CRIMINAL} trên tập $S$ và kiểm tra \texttt{count == k}. Hàm \texttt{\_intersection\_encode} của \texttt{BasicCNFEncoder} ánh xạ các ô trong $S$ thành literal dương rồi tái sử dụng hàm \texttt{\_encode\_count\_literals} với loại \texttt{CountKind.EXACTLY}, ngưỡng $k$ và bộ cấp phát \texttt{allocate\_aux}. Trên giao diện, \texttt{clue\_focus} tô sáng riêng các ô thuộc tập giao $S$ và tách các ô tâm của \texttt{NeighborRegion} vào nhóm neo (\texttt{anchors}), còn \texttt{describe\_clue} diễn đạt bằng cấu trúc \texttt{"both ... and ..."} để tránh nhầm lẫn giữa giao và hợp vùng.
+    \end{itemize}
+\end{enumerate}
 
 \subsection{Chuyển đổi tự động sang Dạng chuẩn Hội (CNF Encoding)}
 
 \subsubsection{Cơ chế xây dựng cơ sở tri thức \texorpdfstring{$KB_t$}{KB\_t}}
-\textit{[Giải thích quy trình chuyển đổi tự động manh mối sang tập mệnh đề tuyển, biểu diễn các phán quyết đã biết thành mệnh đề đơn vị để tạo $KB_t$, và cách thống kê số biến chính, biến phụ, số mệnh đề CNF.]}
+Ở bước suy diễn $t$, phương thức \texttt{build\_kb(state)} của lớp \texttt{GriductiveLogicAgent} (trong \texttt{griductive/agent/inference.py}) chỉ tiếp nhận bản chụp công khai bất biến \texttt{PublicState(board, verdicts, clues)} từ engine, tuyệt đối không truy cập đáp án ẩn hay manh mối của các thẻ chưa lật. Tác tử chuyển toàn bộ thông tin công khai tại bước $t$ cho phương thức \texttt{encode} của \texttt{BasicCNFEncoder} để sinh tự động công thức CNF hoàn chỉnh:
+\[
+KB_t = \left(\bigwedge_{c \in \text{clues}_t} \text{CNF}(c)\right) \land \left(\bigwedge_{v \in \text{verdicts}_t} \text{Unit}(v)\right).
+\]
+Quy trình dựng $KB_t$ không sử dụng bất kỳ công thức CNF viết tay nào cho riêng từng màn chơi và diễn ra qua bốn bước:
+\begin{enumerate}
+    \item \textbf{Khởi tạo không gian biến:} Tạo \texttt{VarMap} gồm $N^2$ biến chính (định danh $1 \dots N^2$) theo thứ tự \emph{row-major} và khởi tạo bộ đếm \texttt{auxiliary\_count = 0}.
+    \item \textbf{Chuyển đổi tự động từng manh mối công khai sang tập mệnh đề tuyển:} Duyệt tuần tự từng manh mối $c \in \text{clues}_t$ và gọi bộ mã hóa tương ứng:
+    \begin{itemize}
+        \item \texttt{FactClue} (\texttt{\_fact\_encode}): sinh $1$ mệnh đề đơn vị $((l,),)$.
+        \item \texttt{BinaryClue} (\texttt{\_binary\_encode}): sinh trực tiếp $2$ mệnh đề $2$-literal biểu diễn tương đương hoặc XOR.
+        \item \texttt{CountClue} (\texttt{\_count\_encode} $\to$ \texttt{\_encode\_count\_literals}): kiểm tra $k \in \mathbb{Z}$ và $0 \le k \le n$ với $n = |R|$, sau đó quy cả ba dạng đếm về \texttt{at\_most\_encode}:
+        \begin{itemize}
+            \item \texttt{AT\_MOST(k)}: mã hóa trực tiếp $\sum_{t=1}^{n} x_t \le k$ trên bộ literal dương $(x_1, \dots, x_n)$ theo \emph{bộ đếm tuần tự (Sequential Counter Encoding)} sử dụng phép định nghĩa tương đương hai chiều ($\leftrightarrow$) cho các biến trạng thái tổng tiền tố $s_{i,j}$ ($1 \le i \le n - 1,\; 1 \le j \le \min(i, k)$). Hai trường hợp biên được tối giản: nếu $k \ge n$ trả về \texttt{()} (luôn thỏa mãn); nếu $k = 0$ sinh $n$ mệnh đề đơn vị $(\neg x_1), \dots, (\neg x_n)$.
+            \item \texttt{AT\_LEAST(k)}: áp dụng biến đổi đối ngẫu $\sum_{t=1}^{n} x_t \ge k \iff \sum_{t=1}^{n} (1 - x_t) \le n - k$, đảo dấu toàn bộ literal thành $(\neg x_1, \dots, \neg x_n)$ và gọi \texttt{at\_most\_encode} với ngưỡng $n - k$.
+            \item \texttt{EXACTLY(k)}: kết hợp hội hai tập mệnh đề của \texttt{AT\_MOST(k)} trên $(x_1, \dots, x_n)$ và \texttt{AT\_MOST(n - k)} trên $(\neg x_1, \dots, \neg x_n)$, mỗi chiều sử dụng tập biến phụ riêng biệt.
+        \end{itemize}
+        \item \texttt{ParityClue} và \texttt{IntersectionClue}: lần lượt chuyển sang chuỗi XOR Tseitin hoặc đếm \texttt{EXACTLY(k)} trên tập giao $S$ như đã mô tả ở Mục 4.1.2.
+    \end{itemize}
+    \item \textbf{Biểu diễn phán quyết đã biết thành mệnh đề đơn vị:} Với mỗi phán quyết \texttt{Verdict(cell, status)} trong \texttt{state.verdicts} (bao gồm các thẻ mở ban đầu và những ô đã chứng minh ở các bước trước), hàm \texttt{\_get\_literal} ánh xạ sang literal $+id$ (nếu \texttt{CRIMINAL}) hoặc $-id$ (nếu \texttt{INNOCENT}) và nối thêm mệnh đề đơn vị $(l,)$ vào danh sách mệnh đề. Nếu dữ liệu đầu vào chứa mâu thuẫn logic, CNF vẫn được sinh hợp lệ để bộ giải DPLL phát hiện trạng thái \texttt{UNSAT}.
+    \item \textbf{Đóng gói và thống kê kích thước $KB_t$:} Hàm trả về \texttt{EncodedKB(cnf, variables)} với \texttt{cnf} là \texttt{tuple[tuple[int, ...], ...]}. Từ đây hệ thống thống kê trực tiếp cho từng bước: số biến chính là $|\text{variables.primary}| = N^2$; số biến phụ là \texttt{variables.auxiliary\_count} (riêng mỗi lần gọi \texttt{at\_most\_encode(n, k)} với $1 \le k < n$ sinh đúng $\sum_{i=1}^{n-1}\min(i, k) = kn - \frac{k(k+1)}{2}$ biến phụ); và tổng số mệnh đề CNF là \texttt{len(kb.cnf)}. Khi chạy thực nghiệm toàn màn ở Phần 5, các chỉ số \texttt{peak\_auxiliary\_variables} và \texttt{peak\_clauses} lấy giá trị cực đại trên tất cả các $KB_t$ đã truy vấn trong vòng suy diễn.
+\end{enumerate}
 
 \subsubsection{Ví dụ dẫn xuất CNF cho manh mối nhị phân và manh mối đếm}
-\textit{[Trình bày chi tiết từng bước biến đổi sang dạng chuẩn hội (CNF) cho ít nhất một manh mối nhị phân (như \texttt{SAME} hoặc \texttt{DIFFERENT}) và một manh mối đếm số lượng (như \texttt{EXACTLY}, \texttt{AT\_LEAST} hoặc \texttt{AT\_MOST}).]}
+Để minh họa chi tiết quá trình chuyển đổi tự động trong \texttt{BasicCNFEncoder}, ta xét các manh mối thực tế trên bàn $3 \times 3$ của màn \texttt{3x3-01} (\texttt{puzzles/3x3-01.json}), với biến chính theo thứ tự \emph{row-major} là $C_1 \dots C_9$ ứng với \texttt{A1, B1, C1, A2, B2, C2, A3, B3, C3}.
+
+\paragraph{1. Dẫn xuất cho manh mối nhị phân (\texttt{DIFFERENT} và \texttt{SAME}):}
+Xét manh mối \texttt{clue-B1} có dạng \texttt{DIFFERENT(A1, B1)} và \texttt{clue-B3} có dạng \texttt{SAME(C2, C3)}:
+\begin{itemize}
+    \item Với \texttt{DIFFERENT(A1, B1)}: \texttt{A1} ứng với $C_1$ (ID $1$), \texttt{B1} ứng với $C_2$ (ID $2$). Biểu thức logic $C_1 \oplus C_2$ tương đương ``ít nhất một trong hai là \emph{Criminal} và không thể cả hai cùng là \emph{Criminal}'':
+    \[
+    C_1 \oplus C_2 \equiv (C_1 \lor C_2) \land \neg(C_1 \land C_2) \equiv (C_1 \lor C_2) \land (\neg C_1 \lor \neg C_2).
+    \]
+    Kết quả CNF thu được là \texttt{((1, 2), (-1, -2))} gồm $2$ mệnh đề và $0$ biến phụ.
+
+    \item Với \texttt{SAME(C2, C3)}: \texttt{C2} ứng với $C_6$ (ID $6$), \texttt{C3} ứng với $C_9$ (ID $9$). Phép tương đương logic được phân rã thành hai phép kéo theo:
+    \[
+    C_6 \leftrightarrow C_9 \equiv (C_6 \to C_9) \land (C_9 \to C_6) \equiv (\neg C_6 \lor C_9) \land (C_6 \lor \neg C_9).
+    \]
+    Kết quả CNF là \texttt{((-6, 9), (6, -9))} gồm $2$ mệnh đề và $0$ biến phụ.
+\end{itemize}
+
+\paragraph{2. Dẫn xuất tổng quát cho bộ đếm tuần tự (\texttt{at\_most\_encode}):}
+Với dãy $n$ literal $(x_1, \dots, x_n)$ và ngưỡng $1 \le k < n$, mỗi biến phụ $s_{i,j}$ ($1 \le i \le n - 1,\; 1 \le j \le \min(i, k)$) biểu diễn trạng thái ``trong $i$ phần tử đầu tiên $x_1, \dots, x_i$ có ít nhất $j$ literal nhận giá trị \text{True}''. Hàm \texttt{at\_most\_encode} chuyển các định nghĩa đệ quy sang CNF như sau:
+\begin{itemize}
+    \item \emph{Trường hợp cơ sở ($i = 1, j = 1$):} $s_{1,1} \leftrightarrow x_1 \equiv (\neg s_{1,1} \lor x_1) \land (s_{1,1} \lor \neg x_1)$.
+    \item \emph{Biên dưới ($j = 1,\; i \ge 2$):} $s_{i,1} \leftrightarrow (s_{i-1,1} \lor x_i)$:
+    \[
+    (\neg s_{i,1} \lor s_{i-1,1} \lor x_i) \land (s_{i,1} \lor \neg s_{i-1,1}) \land (s_{i,1} \lor \neg x_i).
+    \]
+    \item \emph{Đường chéo ($2 \le j = i \le k$):} Do $s_{i-1,i}$ luôn sai nên $s_{i,i} \leftrightarrow (x_i \land s_{i-1,i-1})$:
+    \[
+    (\neg s_{i,i} \lor x_i) \land (\neg s_{i,i} \lor s_{i-1,i-1}) \land (s_{i,i} \lor \neg x_i \lor \neg s_{i-1,i-1}).
+    \]
+    \item \emph{Tổng quát ($2 \le j < i$):} Định nghĩa $s_{i,j} \leftrightarrow \big(s_{i-1,j} \lor (x_i \land s_{i-1,j-1})\big)$ được tách hai chiều và dùng luật phân phối của $\lor$ qua $\land$:
+    \begin{align*}
+    \text{Chiều thuận } (\to): &\quad \neg s_{i,j} \lor s_{i-1,j} \lor (x_i \land s_{i-1,j-1}) \\
+    &\equiv (\neg s_{i,j} \lor s_{i-1,j} \lor x_i) \land (\neg s_{i,j} \lor s_{i-1,j} \lor s_{i-1,j-1}), \\
+    \text{Chiều ngược } (\leftarrow): &\quad \neg\big(s_{i-1,j} \lor (x_i \land s_{i-1,j-1})\big) \lor s_{i,j} \\
+    &\equiv (s_{i,j} \lor \neg s_{i-1,j}) \land (s_{i,j} \lor \neg x_i \lor \neg s_{i-1,j-1}).
+    \end{align*}
+    \item \emph{Ràng buộc cấm vượt quá $k$ ($k + 1 \le i \le n$):} Không được đồng thời $x_i$ đúng và đã có sẵn $k$ phần tử đúng trước đó:
+    \[
+    \neg(x_i \land s_{i-1,k}) \equiv (\neg x_i \lor \neg s_{i-1,k}).
+    \]
+\end{itemize}
+
+\paragraph{3. Dẫn xuất cụ thể cho manh mối đếm \texttt{EXACTLY}:}
+Xét manh mối mở đầu \texttt{clue-B2} của màn \texttt{3x3-01}: \texttt{EXACTLY(1, NEIGHBORS(A1))}. Vùng \texttt{NEIGHBORS(A1)} giải ra $3$ ô theo thứ tự \emph{row-major} là \texttt{B1} ($C_2$), \texttt{A2} ($C_4$), \texttt{B2} ($C_5$), tức $n = 3$, $k = 1$, bộ literal $(x_1, x_2, x_3) = (C_2, C_4, C_5) \equiv (2, 4, 5)$. Bộ mã hóa tách thành hội của hai ràng buộc:
+\begin{enumerate}
+    \item \textbf{Chiều \texttt{AT\_MOST(1)} trên $(2, 4, 5)$:} Cấp phát $1 \cdot 3 - \frac{1 \cdot 2}{2} = 2$ biến phụ là $s_{1,1}$ (ID $10$) và $s_{2,1}$ (ID $11$):
+    \begin{itemize}
+        \item $i=1, j=1$: $s_{1,1} \leftrightarrow C_2 \implies (\neg s_{1,1} \lor C_2) \land (s_{1,1} \lor \neg C_2)$, tức \texttt{(-10, 2), (10, -2)}.
+        \item $i=2, j=1$: $s_{2,1} \leftrightarrow (s_{1,1} \lor C_4) \implies$ \texttt{(-11, 10, 4), (11, -10), (11, -4)}.
+        \item Mệnh đề cấm cho $i=2, 3$: $\neg(C_4 \land s_{1,1})$ và $\neg(C_5 \land s_{2,1}) \implies$ \texttt{(-4, -10), (-5, -11)}.
+    \end{itemize}
+    Phần này sinh $2$ biến phụ (ID $10, 11$) và $7$ mệnh đề CNF.
+
+    \item \textbf{Chiều \texttt{AT\_LEAST(1)} $\equiv$ \texttt{AT\_MOST(2)} trên $(-2, -4, -5)$:} Đặt $y_1 = \neg C_2$, $y_2 = \neg C_4$, $y_3 = \neg C_5$ với ngưỡng $k' = n - k = 2$. Cấp phát $2 \cdot 3 - \frac{2 \cdot 3}{2} = 3$ biến phụ mới là $s'_{1,1}$ (ID $12$), $s'_{2,1}$ (ID $13$) và $s'_{2,2}$ (ID $14$):
+    \begin{itemize}
+        \item $i=1, j=1$: $s'_{1,1} \leftrightarrow \neg C_2 \implies$ \texttt{(-12, -2), (12, 2)}.
+        \item $i=2, j=1$: $s'_{2,1} \leftrightarrow (s'_{1,1} \lor \neg C_4) \implies$ \texttt{(-13, 12, -4), (13, -12), (13, 4)}.
+        \item $i=2, j=2$ (nhánh đường chéo $j = i$): $s'_{2,2} \leftrightarrow (\neg C_4 \land s'_{1,1}) \implies$ \texttt{(-14, -4), (-14, 12), (14, 4, -12)}.
+        \item Mệnh đề cấm cho $i=3$: $\neg(\neg C_5 \land s'_{2,2}) \equiv (C_5 \lor \neg s'_{2,2}) \implies$ \texttt{(5, -14)}.
+    \end{itemize}
+    Phần này sinh $3$ biến phụ (ID $12 \dots 14$) và $9$ mệnh đề CNF.
+\end{enumerate}
+Tổng hợp lại, riêng manh mối \texttt{clue-B2} tạo ra $5$ biến phụ và $16$ mệnh đề CNF. Khi ghép thêm phán quyết mở sẵn của thẻ \texttt{B2} là \texttt{CRIMINAL} thành mệnh đề đơn vị \texttt{(5,)}, $KB_0$ ban đầu của màn \texttt{3x3-01} có $9$ biến chính, $5$ biến phụ và $17$ mệnh đề; chỉ riêng lan truyền đơn vị từ \texttt{(5,)} qua \texttt{(-5, -11)}, \texttt{(11, -10)}, \texttt{(11, -4)} và \texttt{(10, -2)} đã lập tức suy ra $\neg C_4$ và $\neg C_2$, chứng minh được ngay \texttt{A2} và \texttt{B1} đều là \texttt{INNOCENT}.
 
 \subsection{Bộ giải DPLL SAT Solver}
 \textit{[Trình bày nguyên lý và mã giả thuật toán DPLL tự cài đặt gồm: lan truyền đơn vị (\emph{unit propagation}), phát hiện mâu thuẫn, chọn biến tất định, phân nhánh quay lui và cơ chế ghi nhận thống kê (\emph{decisions}, \emph{propagations}, \emph{backtracks}, \emph{runtime}).]}
